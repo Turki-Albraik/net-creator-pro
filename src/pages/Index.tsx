@@ -1,16 +1,59 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Train, Users, TicketCheck, TrendingUp } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
+import DashboardHeader from "@/components/DashboardHeader";
+import StatCard from "@/components/StatCard";
+import TrainScheduleTable from "@/components/TrainScheduleTable";
+import RecentBookings from "@/components/RecentBookings";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+      <main className="flex-1 ml-64 p-8">
+        <DashboardHeader title="Dashboard" subtitle="Welcome back — here's what's happening today" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
+          <StatCard
+            title="Active Trains"
+            value="24"
+            change="+3 from yesterday"
+            changeType="positive"
+            icon={Train}
+          />
+          <StatCard
+            title="Total Passengers"
+            value="1,847"
+            change="+12.5% this week"
+            changeType="positive"
+            icon={Users}
+          />
+          <StatCard
+            title="Reservations Today"
+            value="342"
+            change="89% seat utilization"
+            changeType="neutral"
+            icon={TicketCheck}
+          />
+          <StatCard
+            title="Revenue (Today)"
+            value="SAR 68.4K"
+            change="+8.2% vs avg"
+            changeType="positive"
+            icon={TrendingUp}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
+          <div className="xl:col-span-2">
+            <TrainScheduleTable />
+          </div>
+          <div>
+            <RecentBookings />
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
