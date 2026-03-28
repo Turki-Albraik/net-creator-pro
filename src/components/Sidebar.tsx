@@ -1,5 +1,5 @@
 import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink as RouterNavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
