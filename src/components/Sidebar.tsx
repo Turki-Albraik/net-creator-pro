@@ -1,5 +1,5 @@
 import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink as RouterNavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -26,7 +26,7 @@ const Sidebar = () => {
 
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => (
-          <NavLink
+          <RouterNavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
@@ -40,7 +40,7 @@ const Sidebar = () => {
           >
             <item.icon className="h-4.5 w-4.5" />
             {item.label}
-          </NavLink>
+          </RouterNavLink>
         ))}
       </nav>
 
