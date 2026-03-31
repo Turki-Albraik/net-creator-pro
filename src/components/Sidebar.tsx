@@ -1,17 +1,28 @@
-import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings } from "lucide-react";
-import { NavLink as RouterNavLink } from "react-router-dom";
+import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut } from "lucide-react";
+import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/" },
   { icon: CalendarClock, label: "Schedules", to: "/schedules" },
   { icon: TicketCheck, label: "Reservations", to: "/reservations" },
   { icon: Users, label: "Passengers", to: "/passengers" },
+  { icon: UserCog, label: "Employees", to: "/employees" },
   { icon: BarChart3, label: "Reports", to: "/reports" },
   { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 const Sidebar = () => {
+  const { employee, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
@@ -43,6 +54,19 @@ const Sidebar = () => {
           </RouterNavLink>
         ))}
       </nav>
+
+      {employee && (
+        <div className="p-4 mx-3 mb-2 rounded-lg bg-sidebar-accent/50 border border-sidebar-border">
+          <p className="text-xs font-medium text-sidebar-foreground/80">{employee.name}</p>
+          <p className="text-xs text-sidebar-foreground/60 capitalize">Role: {employee.role}</p>
+        </div>
+      )}
+
+      <div className="px-3 mb-4">
+        <Button variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-2" /> Sign Out
+        </Button>
+      </div>
 
       <div className="p-4 mx-3 mb-4 rounded-lg bg-sidebar-accent/50 border border-sidebar-border">
         <p className="text-xs font-medium text-sidebar-foreground/80">System Status</p>
