@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ const statusColor = (s: string) => {
 };
 
 const Reservations = () => {
+  const navigate = useNavigate();
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -30,7 +32,7 @@ const Reservations = () => {
             <h1 className="font-display text-2xl font-bold text-foreground">Reservations</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage passenger bookings and tickets</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/reservations/new")}>
             <Plus className="h-4 w-4" />
             New Reservation
           </Button>
