@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      reservations: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          num_tickets: number
+          passenger_email: string | null
+          passenger_name: string
+          passenger_phone: string | null
+          route_id: string
+          seat_numbers: string[]
+          status: string
+          total_amount: number
+          travel_date: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          num_tickets?: number
+          passenger_email?: string | null
+          passenger_name: string
+          passenger_phone?: string | null
+          route_id: string
+          seat_numbers: string[]
+          status?: string
+          total_amount: number
+          travel_date: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          num_tickets?: number
+          passenger_email?: string | null
+          passenger_name?: string
+          passenger_phone?: string | null
+          route_id?: string
+          seat_numbers?: string[]
+          status?: string
+          total_amount?: number
+          travel_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "train_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      train_routes: {
+        Row: {
+          arrival_time: string
+          created_at: string
+          departure_time: string
+          destination: string
+          distance_km: number
+          id: string
+          price_per_ticket: number
+          source: string
+          total_seats: number
+          train_id: string
+        }
+        Insert: {
+          arrival_time: string
+          created_at?: string
+          departure_time: string
+          destination: string
+          distance_km: number
+          id?: string
+          price_per_ticket: number
+          source: string
+          total_seats?: number
+          train_id: string
+        }
+        Update: {
+          arrival_time?: string
+          created_at?: string
+          departure_time?: string
+          destination?: string
+          distance_km?: number
+          id?: string
+          price_per_ticket?: number
+          source?: string
+          total_seats?: number
+          train_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
