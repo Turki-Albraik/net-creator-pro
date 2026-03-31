@@ -22,6 +22,7 @@ const statusColor = (s: string) => {
 };
 
 const Reservations = () => {
+  const navigate = useNavigate();
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
