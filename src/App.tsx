@@ -11,6 +11,7 @@ import NewReservation from "./pages/NewReservation.tsx";
 import Passengers from "./pages/Passengers.tsx";
 import Reports from "./pages/Reports.tsx";
 import Employees from "./pages/Employees.tsx";
+import Settings from "./pages/Settings.tsx";
 import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/passengers" element={<ProtectedRoute><Passengers /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute adminOnly><Employees /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

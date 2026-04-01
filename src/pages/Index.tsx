@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
 import { Train, Users, TicketCheck, TrendingUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import StatCard from "@/components/StatCard";
@@ -6,6 +9,36 @@ import TrainScheduleTable from "@/components/TrainScheduleTable";
 import RecentBookings from "@/components/RecentBookings";
 
 const Index = () => {
+  const [activeTrains, setActiveTrains] = useState(0);
+  const [totalPassengers, setTotalPassengers] = useState(0);
+  const [todayReservations, setTodayReservations] = useState(0);
+  const [todayRevenue, setTodayRevenue] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // Active trains = total train routes
+      const { count: trainCount } = await supabase.from("train_routes").select("*", { count: "exact", head: true });
+      setActiveTrains(trainCount || 0);
+
+      // Total passengers
+      const { count: passengerCount } = await supabase.from("passengers").select("*", { count: "exact", head: true });
+      setTotalPassengers(passengerCount || 0);
+
+      // Today's reservations
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data: todayRes } = await supabase
+        .from("reservations")
+        .select("total_amount")
+        .eq("travel_date", today)
+        .eq("status", "Confirmed");
+      
+      setTodayReservations(todayRes?.length || 0);
+      const revenue = (todayRes || []).reduce((sum, r: any) => sum + Number(r.total_amount), 0);
+      setTodayRevenue(revenue);
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -15,30 +48,30 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
           <StatCard
             title="Active Trains"
-            value="24"
-            change="+3 from yesterday"
-            changeType="positive"
+            value={String(activeTrains)}
+            change="From train schedules"
+            changeType="neutral"
             icon={Train}
           />
           <StatCard
             title="Total Passengers"
-            value="1,847"
-            change="+12.5% this week"
-            changeType="positive"
+            value={totalPassengers.toLocaleString()}
+            change="All registered passengers"
+            changeType="neutral"
             icon={Users}
           />
           <StatCard
             title="Reservations Today"
-            value="342"
-            change="89% seat utilization"
+            value={String(todayReservations)}
+            change="Confirmed bookings"
             changeType="neutral"
             icon={TicketCheck}
           />
           <StatCard
             title="Revenue (Today)"
-            value="SAR 68.4K"
-            change="+8.2% vs avg"
-            changeType="positive"
+            value={`SAR ${todayRevenue.toLocaleString()}`}
+            change="Today's confirmed bookings"
+            changeType="neutral"
             icon={TrendingUp}
           />
         </div>

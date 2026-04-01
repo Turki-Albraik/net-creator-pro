@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,22 +9,58 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 
-const reservations = [
-  { id: "BK-4821", passenger: "Ahmed Al-Farsi", train: "TR-101", route: "Riyadh → Jeddah", date: "2026-03-28", seat: "A12", amount: "SAR 250", status: "Confirmed" },
-  { id: "BK-4820", passenger: "Sara Al-Qahtani", train: "TR-315", route: "Jeddah → Madinah", date: "2026-03-28", seat: "B05", amount: "SAR 180", status: "Confirmed" },
-  { id: "BK-4819", passenger: "Omar Al-Rashid", train: "TR-422", route: "Dammam → Riyadh", date: "2026-03-28", seat: "C18", amount: "SAR 220", status: "Pending" },
-  { id: "BK-4818", passenger: "Noura Al-Shehri", train: "TR-204", route: "Riyadh → Dammam", date: "2026-03-29", seat: "A03", amount: "SAR 200", status: "Confirmed" },
-  { id: "BK-4817", passenger: "Khalid Al-Mutairi", train: "TR-530", route: "Madinah → Riyadh", date: "2026-03-29", seat: "D22", amount: "SAR 280", status: "Cancelled" },
-];
+interface Reservation {
+  id: string;
+  booking_id: string;
+  passenger_name: string;
+  route_id: string;
+  travel_date: string;
+  seat_numbers: string[];
+  total_amount: number;
+  status: string;
+  source?: string;
+  destination?: string;
+  train_id?: string;
+}
 
 const statusColor = (s: string) => {
-  if (s === "Confirmed") return "default";
-  if (s === "Pending") return "secondary";
-  return "destructive";
+  if (s === "Confirmed") return "default" as const;
+  if (s === "Pending") return "secondary" as const;
+  return "destructive" as const;
 };
 
 const Reservations = () => {
   const navigate = useNavigate();
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      const { data } = await supabase
+        .from("reservations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!data) return;
+
+      const routeIds = [...new Set((data as any[]).map((d) => d.route_id))];
+      const { data: routes } = await supabase
+        .from("train_routes")
+        .select("id, source, destination, train_id")
+        .in("id", routeIds);
+
+      const routeMap: Record<string, { source: string; destination: string; train_id: string }> = {};
+      if (routes) (routes as any[]).forEach((r) => { routeMap[r.id] = r; });
+
+      setReservations((data as any[]).map((d) => ({
+        ...d,
+        source: routeMap[d.route_id]?.source || "",
+        destination: routeMap[d.route_id]?.destination || "",
+        train_id: routeMap[d.route_id]?.train_id || "",
+      })));
+    };
+    fetchReservations();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -47,7 +85,7 @@ const Reservations = () => {
                 <TableHead className="font-semibold">Train</TableHead>
                 <TableHead className="font-semibold">Route</TableHead>
                 <TableHead className="font-semibold">Date</TableHead>
-                <TableHead className="font-semibold">Seat</TableHead>
+                <TableHead className="font-semibold">Seats</TableHead>
                 <TableHead className="font-semibold">Amount</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
               </TableRow>
@@ -55,18 +93,21 @@ const Reservations = () => {
             <TableBody>
               {reservations.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-mono font-medium">{r.id}</TableCell>
-                  <TableCell>{r.passenger}</TableCell>
-                  <TableCell className="font-mono text-muted-foreground">{r.train}</TableCell>
-                  <TableCell>{r.route}</TableCell>
-                  <TableCell>{r.date}</TableCell>
-                  <TableCell className="font-mono">{r.seat}</TableCell>
-                  <TableCell className="font-medium">{r.amount}</TableCell>
+                  <TableCell className="font-mono font-medium">{r.booking_id}</TableCell>
+                  <TableCell>{r.passenger_name}</TableCell>
+                  <TableCell className="font-mono text-muted-foreground">{r.train_id}</TableCell>
+                  <TableCell>{r.source} → {r.destination}</TableCell>
+                  <TableCell>{r.travel_date}</TableCell>
+                  <TableCell className="font-mono">{r.seat_numbers?.join(", ")}</TableCell>
+                  <TableCell className="font-medium">SAR {Number(r.total_amount).toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant={statusColor(r.status)}>{r.status}</Badge>
                   </TableCell>
                 </TableRow>
               ))}
+              {reservations.length === 0 && (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No reservations yet</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
