@@ -56,7 +56,7 @@ const Employees = () => {
       return;
     }
     toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
-    setForm({ employee_id: "", name: "", password: "", role: "employee", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
     setOpen(false);
     fetchEmployees();
   };
