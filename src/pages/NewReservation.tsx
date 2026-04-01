@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   ArrowLeft, CalendarIcon, MapPin, Clock, Ruler, Train,
-  CreditCard, Printer, CheckCircle2, User,
+  Printer, CheckCircle2, Download,
 } from "lucide-react";
 
 interface TrainRoute {
@@ -29,33 +29,57 @@ interface TrainRoute {
   total_seats: number;
 }
 
+interface PassengerInfo {
+  name: string;
+  email: string;
+  phone: string;
+  countryCode: string;
+}
+
+const countryCodes = [
+  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+971", country: "UAE", flag: "🇦🇪" },
+  { code: "+973", country: "Bahrain", flag: "🇧🇭" },
+  { code: "+965", country: "Kuwait", flag: "🇰🇼" },
+  { code: "+968", country: "Oman", flag: "🇴🇲" },
+  { code: "+974", country: "Qatar", flag: "🇶🇦" },
+  { code: "+20", country: "Egypt", flag: "🇪🇬" },
+  { code: "+962", country: "Jordan", flag: "🇯🇴" },
+  { code: "+1", country: "USA", flag: "🇺🇸" },
+  { code: "+44", country: "UK", flag: "🇬🇧" },
+];
+
 type Step = "route" | "seats" | "confirm" | "ticket";
+
+const validateEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.includes("@") && email.endsWith(".com");
+};
+
+const validatePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10;
+};
 
 const NewReservation = () => {
   const navigate = useNavigate();
   const ticketRef = useRef<HTMLDivElement>(null);
 
-  // Data
   const [routes, setRoutes] = useState<TrainRoute[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [availableSeatsCount, setAvailableSeatsCount] = useState<Record<string, number>>({});
 
-  // Form state
   const [step, setStep] = useState<Step>("route");
   const [selectedRoute, setSelectedRoute] = useState<TrainRoute | null>(null);
   const [travelDate, setTravelDate] = useState<Date>();
   const [numTickets, setNumTickets] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [passengerName, setPassengerName] = useState("");
-  const [passengerEmail, setPassengerEmail] = useState("");
-  const [passengerPhone, setPassengerPhone] = useState("");
+  const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "", phone: "", countryCode: "+966" }]);
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filters
   const [sourceFilter, setSourceFilter] = useState("");
   const [destFilter, setDestFilter] = useState("");
 
-  // Load routes
   useEffect(() => {
     const fetchRoutes = async () => {
       const { data } = await supabase.from("train_routes").select("*");
@@ -64,7 +88,34 @@ const NewReservation = () => {
     fetchRoutes();
   }, []);
 
-  // Load booked seats when route + date selected
+  // Fetch available seats counts for all routes on selected date
+  useEffect(() => {
+    if (!travelDate) return;
+    const fetchCounts = async () => {
+      const { data } = await supabase
+        .from("reservations")
+        .select("route_id, seat_numbers")
+        .eq("travel_date", format(travelDate, "yyyy-MM-dd"))
+        .eq("status", "Confirmed");
+      const counts: Record<string, number> = {};
+      if (data) {
+        const booked: Record<string, number> = {};
+        (data as unknown as { route_id: string; seat_numbers: string[] }[]).forEach((r) => {
+          booked[r.route_id] = (booked[r.route_id] || 0) + r.seat_numbers.length;
+        });
+        routes.forEach((route) => {
+          counts[route.id] = route.total_seats - (booked[route.id] || 0);
+        });
+      } else {
+        routes.forEach((route) => {
+          counts[route.id] = route.total_seats;
+        });
+      }
+      setAvailableSeatsCount(counts);
+    };
+    if (routes.length > 0) fetchCounts();
+  }, [travelDate, routes]);
+
   useEffect(() => {
     if (!selectedRoute || !travelDate) return;
     const fetchBooked = async () => {
@@ -82,7 +133,20 @@ const NewReservation = () => {
     fetchBooked();
   }, [selectedRoute, travelDate]);
 
-  const cities = [...new Set(routes.flatMap((r) => [r.source, r.destination]))];
+  // Update passengers array when numTickets changes
+  useEffect(() => {
+    setPassengers((prev) => {
+      if (numTickets > prev.length) {
+        return [...prev, ...Array(numTickets - prev.length).fill(null).map(() => ({ name: "", email: "", phone: "", countryCode: "+966" }))];
+      }
+      return prev.slice(0, numTickets);
+    });
+    setSelectedSeats([]);
+  }, [numTickets]);
+
+  const sources = [...new Set(routes.map((r) => r.source))];
+  const destinations = [...new Set(routes.map((r) => r.destination))].filter((d) => d !== sourceFilter);
+
   const filteredRoutes = routes.filter(
     (r) =>
       (!sourceFilter || r.source === sourceFilter) &&
@@ -96,15 +160,35 @@ const NewReservation = () => {
     );
   };
 
+  const updatePassenger = (index: number, field: keyof PassengerInfo, value: string) => {
+    setPassengers((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  const validateAllPassengers = (): string | null => {
+    for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
+      if (p.email && !validateEmail(p.email)) return `Passenger ${i + 1}: Email must contain @ and end with .com`;
+      if (p.phone && !validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 10 digits`;
+    }
+    return null;
+  };
+
   const handleConfirm = async () => {
-    if (!selectedRoute || !travelDate || !passengerName.trim()) return;
+    if (!selectedRoute || !travelDate) return;
+    const validationError = validateAllPassengers();
+    if (validationError) {
+      toast({ title: "Validation Error", description: validationError, variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     const newBookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const { error } = await supabase.from("reservations").insert({
       booking_id: newBookingId,
-      passenger_name: passengerName.trim(),
-      passenger_email: passengerEmail.trim() || null,
-      passenger_phone: passengerPhone.trim() || null,
+      passenger_name: passengers.map((p) => p.name.trim()).join(", "),
+      passenger_email: passengers[0].email.trim() || null,
+      passenger_phone: passengers[0].phone ? `${passengers[0].countryCode}${passengers[0].phone}` : null,
       route_id: selectedRoute.id,
       travel_date: format(travelDate, "yyyy-MM-dd"),
       seat_numbers: selectedSeats,
@@ -112,46 +196,57 @@ const NewReservation = () => {
       total_amount: numTickets * selectedRoute.price_per_ticket,
       status: "Confirmed",
     } as any);
-    setIsSubmitting(false);
+
     if (error) {
+      setIsSubmitting(false);
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
-    // Auto-add passenger to passengers table
-    const { data: existingPassenger } = await supabase
-      .from("passengers")
-      .select("id, trips, total_spent")
-      .eq("name", passengerName.trim())
-      .eq("email", passengerEmail.trim() || "")
-      .maybeSingle();
 
-    const tripAmount = numTickets * selectedRoute.price_per_ticket;
+    // Add each passenger to passengers table
+    for (const p of passengers) {
+      const tripAmount = selectedRoute.price_per_ticket;
+      const fullPhone = p.phone ? `${p.countryCode}${p.phone}` : null;
 
-    if (existingPassenger) {
-      await supabase.from("passengers").update({
-        trips: (existingPassenger.trips || 0) + 1,
-        total_spent: Number(existingPassenger.total_spent || 0) + tripAmount,
-        phone: passengerPhone.trim() || null,
-      } as any).eq("id", existingPassenger.id);
-    } else {
-      await supabase.from("passengers").insert({
-        name: passengerName.trim(),
-        email: passengerEmail.trim() || null,
-        phone: passengerPhone.trim() || null,
-        trips: 1,
-        total_spent: tripAmount,
-      } as any);
+      const { data: existing } = await supabase
+        .from("passengers")
+        .select("id, trips, total_spent")
+        .eq("name", p.name.trim())
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from("passengers").update({
+          trips: (existing.trips || 0) + 1,
+          total_spent: Number(existing.total_spent || 0) + tripAmount,
+          phone: fullPhone,
+          email: p.email.trim() || null,
+        } as any).eq("id", existing.id);
+      } else {
+        await supabase.from("passengers").insert({
+          name: p.name.trim(),
+          email: p.email.trim() || null,
+          phone: fullPhone,
+          trips: 1,
+          total_spent: tripAmount,
+        } as any);
+      }
     }
 
+    setIsSubmitting(false);
     setBookingId(newBookingId);
     setStep("ticket");
     toast({ title: "Reservation confirmed!", description: `Booking ${newBookingId} created.` });
   };
 
-  const handlePrint = () => {
-    if (!ticketRef.current) return;
+  const handlePrintPDF = () => {
+    if (!selectedRoute || !travelDate) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+    
+    const passengersHtml = passengers.map((p, i) => `
+      <div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>
+    `).join("");
+
     printWindow.document.write(`
       <html><head><title>Ticket ${bookingId}</title>
       <style>
@@ -160,26 +255,27 @@ const NewReservation = () => {
         .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 16px; margin-bottom: 16px; }
         .header h1 { font-size: 20px; color: #1a2744; margin: 0; }
         .header p { color: #888; font-size: 12px; margin: 4px 0 0; }
-        .row { display: flex; justify-content: space-between; padding: 8px 0; }
+        .row { display: flex; justify-content: space-between; padding: 6px 0; }
         .label { color: #888; font-size: 13px; }
         .value { font-weight: 600; font-size: 14px; }
         .route { text-align: center; font-size: 22px; font-weight: 700; color: #1a2744; padding: 12px 0; }
         .seats { text-align: center; background: #f5f5f5; padding: 10px; border-radius: 8px; margin: 12px 0; font-weight: 600; }
         .total { text-align: center; font-size: 24px; font-weight: 700; color: #c77d15; margin-top: 12px; }
+        @media print { body { padding: 20px; } }
       </style></head><body>
       <div class="ticket">
         <div class="header"><h1>🚄 Saudi Rail</h1><p>E-Ticket</p></div>
-        <div class="route">${selectedRoute?.source} → ${selectedRoute?.destination}</div>
+        <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
         <div class="row"><span class="label">Booking ID</span><span class="value">${bookingId}</span></div>
-        <div class="row"><span class="label">Passenger</span><span class="value">${passengerName}</span></div>
-        <div class="row"><span class="label">Train</span><span class="value">${selectedRoute?.train_id}</span></div>
-        <div class="row"><span class="label">Date</span><span class="value">${travelDate ? format(travelDate, "PPP") : ""}</span></div>
-        <div class="row"><span class="label">Departure</span><span class="value">${selectedRoute?.departure_time}</span></div>
-        <div class="row"><span class="label">Arrival</span><span class="value">${selectedRoute?.arrival_time}</span></div>
+        ${passengersHtml}
+        <div class="row"><span class="label">Train</span><span class="value">${selectedRoute.train_id}</span></div>
+        <div class="row"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
+        <div class="row"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
+        <div class="row"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
         <div class="seats">Seats: ${selectedSeats.join(", ")}</div>
-        <div class="total">SAR ${selectedRoute ? (numTickets * selectedRoute.price_per_ticket).toFixed(0) : 0}</div>
+        <div class="total">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</div>
       </div>
-      <script>window.print();window.close();</script>
+      <script>window.print();</script>
       </body></html>
     `);
     printWindow.document.close();
@@ -255,7 +351,6 @@ const NewReservation = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 ml-64 p-8">
-        {/* Header */}
         <div className="flex items-center gap-4 border-b border-border pb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/reservations")}>
             <ArrowLeft className="h-5 w-5" />
@@ -266,7 +361,6 @@ const NewReservation = () => {
           </div>
         </div>
 
-        {/* Steps indicator */}
         <div className="flex items-center gap-2 mt-6 mb-8">
           {(["route", "seats", "confirm", "ticket"] as Step[]).map((s, i) => (
             <div key={s} className="flex items-center gap-2">
@@ -292,10 +386,10 @@ const NewReservation = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Source</Label>
-                <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <Select value={sourceFilter} onValueChange={(v) => { setSourceFilter(v); if (v === destFilter) setDestFilter(""); }}>
                   <SelectTrigger><SelectValue placeholder="Any source" /></SelectTrigger>
                   <SelectContent>
-                    {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {sources.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -304,7 +398,7 @@ const NewReservation = () => {
                 <Select value={destFilter} onValueChange={setDestFilter}>
                   <SelectTrigger><SelectValue placeholder="Any destination" /></SelectTrigger>
                   <SelectContent>
-                    {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {destinations.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -338,7 +432,7 @@ const NewReservation = () => {
                 min={1}
                 max={10}
                 value={numTickets}
-                onChange={(e) => { setNumTickets(Math.max(1, Math.min(10, parseInt(e.target.value) || 1))); setSelectedSeats([]); }}
+                onChange={(e) => setNumTickets(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
                 className="w-32"
               />
             </div>
@@ -349,39 +443,42 @@ const NewReservation = () => {
                 <p className="text-muted-foreground text-sm">No routes found. Try different filters.</p>
               ) : (
                 <div className="grid gap-3">
-                  {filteredRoutes.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => { setSelectedRoute(r); setSelectedSeats([]); }}
-                      className={cn(
-                        "w-full text-left p-5 rounded-xl border transition-all",
-                        selectedRoute?.id === r.id
-                          ? "border-primary bg-primary/5 shadow-md"
-                          : "border-border bg-card hover:border-primary/50"
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Train className="h-5 w-5 text-primary" />
+                  {filteredRoutes.map((r) => {
+                    const avail = travelDate ? (availableSeatsCount[r.id] ?? r.total_seats) : r.total_seats;
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => { setSelectedRoute(r); setSelectedSeats([]); }}
+                        className={cn(
+                          "w-full text-left p-5 rounded-xl border transition-all",
+                          selectedRoute?.id === r.id
+                            ? "border-primary bg-primary/5 shadow-md"
+                            : "border-border bg-card hover:border-primary/50"
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Train className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-display font-semibold text-foreground">{r.source} → {r.destination}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{r.train_id}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-display font-semibold text-foreground">{r.source} → {r.destination}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{r.train_id}</p>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-foreground">SAR {r.price_per_ticket}</p>
+                            <p className="text-xs text-muted-foreground">per ticket</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-foreground">SAR {r.price_per_ticket}</p>
-                          <p className="text-xs text-muted-foreground">per ticket</p>
+                        <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{r.departure_time} – {r.arrival_time}</span>
+                          <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{r.distance_km} km</span>
+                          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{avail}/{r.total_seats} seats available</span>
                         </div>
-                      </div>
-                      <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{r.departure_time} – {r.arrival_time}</span>
-                        <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{r.distance_km} km</span>
-                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{r.total_seats} seats</span>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -430,25 +527,62 @@ const NewReservation = () => {
           </div>
         )}
 
-        {/* Step 3: Confirm */}
+        {/* Step 3: Confirm - Multi-passenger */}
         {step === "confirm" && selectedRoute && (
-          <div className="max-w-lg space-y-6">
-            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <div className="max-w-2xl space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6 space-y-6">
               <h3 className="font-display font-semibold text-lg">Passenger Details</h3>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>Full Name *</Label>
-                  <Input value={passengerName} onChange={(e) => setPassengerName(e.target.value)} placeholder="e.g. Ahmed Al-Farsi" />
+              {passengers.map((p, i) => (
+                <div key={i} className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat {selectedSeats[i] || "N/A"}</p>
+                  <div className="space-y-1.5">
+                    <Label>Full Name *</Label>
+                    <Input value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} placeholder="e.g. Ahmed Al-Farsi" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Email (must include @ and end with .com)</Label>
+                    <Input 
+                      type="email" 
+                      value={p.email} 
+                      onChange={(e) => updatePassenger(i, "email", e.target.value)} 
+                      placeholder="e.g. ahmed@email.com" 
+                    />
+                    {p.email && !validateEmail(p.email) && (
+                      <p className="text-xs text-destructive">Email must contain @ and end with .com</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Phone (10 digits)</Label>
+                    <div className="flex gap-2">
+                      <Select value={p.countryCode} onValueChange={(v) => updatePassenger(i, "countryCode", v)}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryCodes.map((cc) => (
+                            <SelectItem key={cc.code} value={cc.code}>
+                              {cc.flag} {cc.code} {cc.country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input 
+                        value={p.phone} 
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          updatePassenger(i, "phone", val);
+                        }} 
+                        placeholder="5XXXXXXXX" 
+                        maxLength={10}
+                        className="flex-1"
+                      />
+                    </div>
+                    {p.phone && !validatePhone(p.phone) && (
+                      <p className="text-xs text-destructive">Phone number must be exactly 10 digits</p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Email</Label>
-                  <Input type="email" value={passengerEmail} onChange={(e) => setPassengerEmail(e.target.value)} placeholder="e.g. ahmed@email.com" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Phone</Label>
-                  <Input value={passengerPhone} onChange={(e) => setPassengerPhone(e.target.value)} placeholder="e.g. +966 55 000 0000" />
-                </div>
-              </div>
+              ))}
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 space-y-3">
@@ -467,7 +601,7 @@ const NewReservation = () => {
 
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={() => setStep("seats")}>Back</Button>
-              <Button onClick={handleConfirm} disabled={!passengerName.trim() || isSubmitting}>
+              <Button onClick={handleConfirm} disabled={isSubmitting}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 {isSubmitting ? "Confirming..." : "Confirm Reservation"}
               </Button>
@@ -488,7 +622,9 @@ const NewReservation = () => {
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Booking ID</span><span className="font-mono font-bold">{bookingId}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Passenger</span><span className="font-medium">{passengerName}</span></div>
+                {passengers.map((p, i) => (
+                  <div key={i} className="flex justify-between"><span className="text-muted-foreground">Passenger {i + 1}</span><span className="font-medium">{p.name}</span></div>
+                ))}
                 <div className="flex justify-between"><span className="text-muted-foreground">Train</span><span className="font-mono">{selectedRoute.train_id}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{travelDate ? format(travelDate, "PPP") : ""}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Departure</span><span>{selectedRoute.departure_time}</span></div>
@@ -509,9 +645,9 @@ const NewReservation = () => {
               <Button variant="outline" onClick={() => navigate("/reservations")}>
                 Back to Reservations
               </Button>
-              <Button onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print Ticket
+              <Button onClick={handlePrintPDF}>
+                <Download className="h-4 w-4 mr-2" />
+                Download / Print Ticket
               </Button>
             </div>
           </div>

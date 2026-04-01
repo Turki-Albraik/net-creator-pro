@@ -1,31 +1,67 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { format } from "date-fns";
 
-const schedules = [
-  { id: "TR-101", route: "Riyadh → Jeddah", departure: "06:00", arrival: "10:30", seats: 320, booked: 287, status: "On Time" },
-  { id: "TR-204", route: "Riyadh → Dammam", departure: "07:30", arrival: "11:00", seats: 280, booked: 280, status: "Full" },
-  { id: "TR-315", route: "Jeddah → Madinah", departure: "09:15", arrival: "11:45", seats: 200, booked: 156, status: "On Time" },
-  { id: "TR-422", route: "Dammam → Riyadh", departure: "14:00", arrival: "17:30", seats: 320, booked: 198, status: "Delayed" },
-  { id: "TR-530", route: "Madinah → Riyadh", departure: "16:00", arrival: "20:00", seats: 280, booked: 245, status: "On Time" },
-];
+interface Schedule {
+  id: string;
+  train_id: string;
+  source: string;
+  destination: string;
+  departure_time: string;
+  arrival_time: string;
+  total_seats: number;
+  booked: number;
+}
 
 const statusVariant = (status: string) => {
   switch (status) {
-    case "On Time": return "default";
-    case "Full": return "secondary";
-    case "Delayed": return "destructive";
-    default: return "outline";
+    case "On Time": return "default" as const;
+    case "Full": return "secondary" as const;
+    case "Delayed": return "destructive" as const;
+    default: return "outline" as const;
   }
 };
 
 const TrainScheduleTable = () => {
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      const { data: routes } = await supabase.from("train_routes").select("*");
+      if (!routes) return;
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data: reservations } = await supabase
+        .from("reservations")
+        .select("route_id, seat_numbers")
+        .eq("travel_date", today)
+        .eq("status", "Confirmed");
+
+      const bookedMap: Record<string, number> = {};
+      if (reservations) {
+        (reservations as any[]).forEach((r) => {
+          bookedMap[r.route_id] = (bookedMap[r.route_id] || 0) + r.seat_numbers.length;
+        });
+      }
+
+      setSchedules((routes as any[]).map((r) => ({
+        id: r.id,
+        train_id: r.train_id,
+        source: r.source,
+        destination: r.destination,
+        departure_time: r.departure_time,
+        arrival_time: r.arrival_time,
+        total_seats: r.total_seats,
+        booked: bookedMap[r.id] || 0,
+      })));
+    };
+    fetchSchedules();
+  }, []);
+
   return (
     <div className="rounded-xl border border-border bg-card">
       <div className="p-5 border-b border-border">
@@ -44,28 +80,32 @@ const TrainScheduleTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {schedules.map((s) => (
-            <TableRow key={s.id}>
-              <TableCell className="font-mono font-medium text-foreground">{s.id}</TableCell>
-              <TableCell>{s.route}</TableCell>
-              <TableCell>{s.departure}</TableCell>
-              <TableCell>{s.arrival}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-secondary transition-all"
-                      style={{ width: `${(s.booked / s.seats) * 100}%` }}
-                    />
+          {schedules.length === 0 && (
+            <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No trains scheduled</TableCell></TableRow>
+          )}
+          {schedules.map((s) => {
+            const occupancy = s.total_seats > 0 ? (s.booked / s.total_seats) * 100 : 0;
+            const status = s.booked >= s.total_seats ? "Full" : "On Time";
+            return (
+              <TableRow key={s.id}>
+                <TableCell className="font-mono font-medium text-foreground">{s.train_id}</TableCell>
+                <TableCell>{s.source} → {s.destination}</TableCell>
+                <TableCell>{s.departure_time}</TableCell>
+                <TableCell>{s.arrival_time}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-secondary transition-all" style={{ width: `${Math.min(occupancy, 100)}%` }} />
+                    </div>
+                    <span className="text-xs text-muted-foreground">{s.booked}/{s.total_seats}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{s.booked}/{s.seats}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge variant={statusVariant(s.status)}>{s.status}</Badge>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={statusVariant(status)}>{status}</Badge>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
