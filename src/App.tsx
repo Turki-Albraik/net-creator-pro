@@ -11,6 +11,7 @@ import NewReservation from "./pages/NewReservation.tsx";
 import Passengers from "./pages/Passengers.tsx";
 import Reports from "./pages/Reports.tsx";
 import Employees from "./pages/Employees.tsx";
+import Settings from "./pages/Settings.tsx";
 import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
