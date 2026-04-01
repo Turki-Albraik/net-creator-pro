@@ -117,6 +117,32 @@ const NewReservation = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    // Auto-add passenger to passengers table
+    const { data: existingPassenger } = await supabase
+      .from("passengers")
+      .select("id, trips, total_spent")
+      .eq("name", passengerName.trim())
+      .eq("email", passengerEmail.trim() || "")
+      .maybeSingle();
+
+    const tripAmount = numTickets * selectedRoute.price_per_ticket;
+
+    if (existingPassenger) {
+      await supabase.from("passengers").update({
+        trips: (existingPassenger.trips || 0) + 1,
+        total_spent: Number(existingPassenger.total_spent || 0) + tripAmount,
+        phone: passengerPhone.trim() || null,
+      } as any).eq("id", existingPassenger.id);
+    } else {
+      await supabase.from("passengers").insert({
+        name: passengerName.trim(),
+        email: passengerEmail.trim() || null,
+        phone: passengerPhone.trim() || null,
+        trips: 1,
+        total_spent: tripAmount,
+      } as any);
+    }
+
     setBookingId(newBookingId);
     setStep("ticket");
     toast({ title: "Reservation confirmed!", description: `Booking ${newBookingId} created.` });

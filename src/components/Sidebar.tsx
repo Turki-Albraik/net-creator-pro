@@ -36,7 +36,7 @@ const Sidebar = () => {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => (
+        {navItems.filter((item) => !item.adminOnly || employee?.role === "Railway Administrator").map((item) => (
           <RouterNavLink
             key={item.to}
             to={item.to}

@@ -73,8 +73,8 @@ const Employees = () => {
 
   const roleBadgeVariant = (role: string) => {
     switch (role) {
-      case "staff": return "default";
-      case "admin": return "destructive";
+      case "Railway Administrator": return "destructive";
+      case "Railway Staff": return "default";
       default: return "secondary";
     }
   };
