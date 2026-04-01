@@ -47,6 +47,36 @@ export type Database = {
         }
         Relationships: []
       }
+      passengers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          total_spent: number
+          trips: number
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          total_spent?: number
+          trips?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          total_spent?: number
+          trips?: number
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           booking_id: string

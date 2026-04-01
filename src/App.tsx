@@ -16,9 +16,10 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
+  const { isAuthenticated, employee } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (adminOnly && employee?.role !== "Railway Administrator") return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -37,7 +38,7 @@ const App = () => (
             <Route path="/reservations/new" element={<ProtectedRoute><NewReservation /></ProtectedRoute>} />
             <Route path="/passengers" element={<ProtectedRoute><Passengers /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute adminOnly><Employees /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

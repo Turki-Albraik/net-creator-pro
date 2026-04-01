@@ -28,7 +28,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "employee", email: "", phone: "" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -56,7 +56,7 @@ const Employees = () => {
       return;
     }
     toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
-    setForm({ employee_id: "", name: "", password: "", role: "employee", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
     setOpen(false);
     fetchEmployees();
   };
@@ -73,8 +73,8 @@ const Employees = () => {
 
   const roleBadgeVariant = (role: string) => {
     switch (role) {
-      case "staff": return "default";
-      case "admin": return "destructive";
+      case "Railway Administrator": return "destructive";
+      case "Railway Staff": return "default";
       default: return "secondary";
     }
   };
@@ -105,10 +105,8 @@ const Employees = () => {
                     <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="staff">Staff</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="conductor">Conductor</SelectItem>
+                        <SelectItem value="Railway Administrator">Railway Administrator</SelectItem>
+                        <SelectItem value="Railway Staff">Railway Staff</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
