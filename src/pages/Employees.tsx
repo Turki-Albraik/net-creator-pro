@@ -105,10 +105,8 @@ const Employees = () => {
                     <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="staff">Staff</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="conductor">Conductor</SelectItem>
+                        <SelectItem value="Railway Administrator">Railway Administrator</SelectItem>
+                        <SelectItem value="Railway Staff">Railway Staff</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
