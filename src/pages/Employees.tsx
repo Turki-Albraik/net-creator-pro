@@ -28,7 +28,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "employee", email: "", phone: "" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
