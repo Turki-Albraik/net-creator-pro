@@ -5,13 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", to: "/" },
-  { icon: CalendarClock, label: "Schedules", to: "/schedules" },
-  { icon: TicketCheck, label: "Reservations", to: "/reservations" },
-  { icon: Users, label: "Passengers", to: "/passengers" },
-  { icon: UserCog, label: "Employees", to: "/employees" },
-  { icon: BarChart3, label: "Reports", to: "/reports" },
-  { icon: Settings, label: "Settings", to: "/settings" },
+  { icon: LayoutDashboard, label: "Dashboard", to: "/", adminOnly: false },
+  { icon: CalendarClock, label: "Schedules", to: "/schedules", adminOnly: false },
+  { icon: TicketCheck, label: "Reservations", to: "/reservations", adminOnly: false },
+  { icon: Users, label: "Passengers", to: "/passengers", adminOnly: false },
+  { icon: UserCog, label: "Employees", to: "/employees", adminOnly: true },
+  { icon: BarChart3, label: "Reports", to: "/reports", adminOnly: false },
+  { icon: Settings, label: "Settings", to: "/settings", adminOnly: false },
 ];
 
 const Sidebar = () => {
