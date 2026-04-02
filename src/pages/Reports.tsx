@@ -1,12 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+const printChart = (title: string, ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+  const svg = ref.current.querySelector("svg");
+  const svgHtml = svg ? svg.outerHTML : "<p>No chart data</p>";
+  printWindow.document.write(`
+    <html><head><title>${title}</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:40px;text-align:center;}h1{font-size:20px;margin-bottom:24px;}svg{max-width:100%;height:auto;}@media print{body{padding:20px;}}</style>
+    </head><body><h1>${title}</h1>${svgHtml}<script>window.print();</script></body></html>
+  `);
+  printWindow.document.close();
+};
 
 const Reports = () => {
   const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
   const [routeData, setRouteData] = useState<{ route: string; bookings: number }[]>([]);
+  const revenueRef = useRef<HTMLDivElement>(null);
+  const routeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,7 +35,6 @@ const Reports = () => {
 
       if (!reservations) return;
 
-      // Revenue by month
       const monthMap: Record<string, number> = {};
       (reservations as any[]).forEach((r) => {
         const month = new Date(r.created_at).toLocaleString("en-US", { month: "short", year: "2-digit" });
@@ -25,7 +42,6 @@ const Reports = () => {
       });
       setRevenueData(Object.entries(monthMap).map(([month, revenue]) => ({ month, revenue })));
 
-      // Bookings by route
       const { data: routes } = await supabase.from("train_routes").select("id, source, destination");
       const routeMap: Record<string, string> = {};
       if (routes) (routes as any[]).forEach((r) => { routeMap[r.id] = `${r.source}→${r.destination}`; });
@@ -51,10 +67,13 @@ const Reports = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="font-display text-lg">Revenue by Period</CardTitle>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printChart("Revenue by Period", revenueRef)}>
+                <Printer className="h-4 w-4" /> Print
+              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent ref={revenueRef}>
               {revenueData.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-12">No reservation data yet</p>
               ) : (
@@ -72,10 +91,13 @@ const Reports = () => {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="font-display text-lg">Bookings by Route</CardTitle>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printChart("Bookings by Route", routeRef)}>
+                <Printer className="h-4 w-4" /> Print
+              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent ref={routeRef}>
               {routeData.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-12">No reservation data yet</p>
               ) : (

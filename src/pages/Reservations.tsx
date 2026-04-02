@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 
 interface Reservation {
   id: string;
@@ -31,35 +32,45 @@ const statusColor = (s: string) => {
 
 const Reservations = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
-  useEffect(() => {
-    const fetchReservations = async () => {
-      const { data } = await supabase
-        .from("reservations")
-        .select("*")
-        .order("created_at", { ascending: false });
+  const fetchReservations = async () => {
+    const { data } = await supabase
+      .from("reservations")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      if (!data) return;
+    if (!data) return;
 
-      const routeIds = [...new Set((data as any[]).map((d) => d.route_id))];
-      const { data: routes } = await supabase
-        .from("train_routes")
-        .select("id, source, destination, train_id")
-        .in("id", routeIds);
+    const routeIds = [...new Set((data as any[]).map((d) => d.route_id))];
+    const { data: routes } = await supabase
+      .from("train_routes")
+      .select("id, source, destination, train_id")
+      .in("id", routeIds);
 
-      const routeMap: Record<string, { source: string; destination: string; train_id: string }> = {};
-      if (routes) (routes as any[]).forEach((r) => { routeMap[r.id] = r; });
+    const routeMap: Record<string, { source: string; destination: string; train_id: string }> = {};
+    if (routes) (routes as any[]).forEach((r) => { routeMap[r.id] = r; });
 
-      setReservations((data as any[]).map((d) => ({
-        ...d,
-        source: routeMap[d.route_id]?.source || "",
-        destination: routeMap[d.route_id]?.destination || "",
-        train_id: routeMap[d.route_id]?.train_id || "",
-      })));
-    };
+    setReservations((data as any[]).map((d) => ({
+      ...d,
+      source: routeMap[d.route_id]?.source || "",
+      destination: routeMap[d.route_id]?.destination || "",
+      train_id: routeMap[d.route_id]?.train_id || "",
+    })));
+  };
+
+  useEffect(() => { fetchReservations(); }, []);
+
+  const handleDelete = async (id: string, bookingId: string) => {
+    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Reservation Deleted", description: `${bookingId} has been removed` });
     fetchReservations();
-  }, []);
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -88,6 +99,7 @@ const Reservations = () => {
                 <TableHead className="font-semibold">Seats</TableHead>
                 <TableHead className="font-semibold">Amount</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -103,10 +115,15 @@ const Reservations = () => {
                   <TableCell>
                     <Badge variant={statusColor(r.status)}>{r.status}</Badge>
                   </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id, r.booking_id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {reservations.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No reservations yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No reservations yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
