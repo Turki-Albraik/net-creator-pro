@@ -133,7 +133,7 @@ const Reservations = () => {
                     <div className="flex gap-1">
                       {r.status === "Confirmed" && (
                         <Button variant="ghost" size="icon" title="Cancel reservation" onClick={() => handleCancel(r.id, r.booking_id)}>
-                          <XCircle className="h-4 w-4 text-orange-500" />
+                          <XCircle className="h-4 w-4 text-secondary" />
                         </Button>
                       )}
                       <Button variant="ghost" size="icon" title="Delete reservation" onClick={() => handleDelete(r.id, r.booking_id)}>
