@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
@@ -26,8 +26,9 @@ interface Reservation {
 
 const statusColor = (s: string) => {
   if (s === "Confirmed") return "default" as const;
+  if (s === "Cancelled") return "destructive" as const;
   if (s === "Pending") return "secondary" as const;
-  return "destructive" as const;
+  return "outline" as const;
 };
 
 const Reservations = () => {
@@ -61,6 +62,19 @@ const Reservations = () => {
   };
 
   useEffect(() => { fetchReservations(); }, []);
+
+  const handleCancel = async (id: string, bookingId: string) => {
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "Cancelled" } as any)
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Reservation Cancelled", description: `${bookingId} has been cancelled. Seats are now available.` });
+    fetchReservations();
+  };
 
   const handleDelete = async (id: string, bookingId: string) => {
     const { error } = await supabase.from("reservations").delete().eq("id", id);
@@ -116,9 +130,16 @@ const Reservations = () => {
                     <Badge variant={statusColor(r.status)}>{r.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id, r.booking_id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1">
+                      {r.status === "Confirmed" && (
+                        <Button variant="ghost" size="icon" title="Cancel reservation" onClick={() => handleCancel(r.id, r.booking_id)}>
+                          <XCircle className="h-4 w-4 text-orange-500" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" title="Delete reservation" onClick={() => handleDelete(r.id, r.booking_id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
