@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  ArrowLeft, CalendarIcon, MapPin, Clock, Ruler, Train,
+  ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
   Printer, CheckCircle2, Download,
 } from "lucide-react";
 
