@@ -140,6 +140,7 @@ export type Database = {
           id: string
           price_per_ticket: number
           source: string
+          status: string
           total_seats: number
           train_id: string
         }
@@ -152,6 +153,7 @@ export type Database = {
           id?: string
           price_per_ticket: number
           source: string
+          status?: string
           total_seats?: number
           train_id: string
         }
@@ -164,6 +166,7 @@ export type Database = {
           id?: string
           price_per_ticket?: number
           source?: string
+          status?: string
           total_seats?: number
           train_id?: string
         }

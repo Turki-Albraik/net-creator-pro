@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, X } from "lucide-react";
+import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/", adminOnly: false },
@@ -27,30 +27,41 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Toggle button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 bg-card border border-border shadow-sm"
-        style={{ left: isOpen ? "17rem" : "1rem" }}
-      >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
+      {/* Collapsed toggle button — only visible when sidebar is hidden */}
+      {!isOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsOpen(true)}
+          className="fixed top-4 left-4 z-50 bg-card border border-border shadow-sm"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
 
       {/* Sidebar */}
       <aside className={cn(
         "fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Train className="h-5 w-5 text-sidebar-primary-foreground" />
+        <div className="flex items-center justify-between px-6 py-6 border-b border-sidebar-border">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
+              <Train className="h-5 w-5 text-sidebar-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-display text-lg font-bold text-sidebar-foreground">RailSync</h1>
+              <p className="text-xs text-sidebar-foreground/60">Management System</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-lg font-bold text-sidebar-foreground">RailSync</h1>
-            <p className="text-xs text-sidebar-foreground/60">Management System</p>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(false)}
+            className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-8 w-8"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">

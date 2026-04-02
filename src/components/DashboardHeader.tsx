@@ -1,6 +1,5 @@
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const DashboardHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => {
@@ -18,10 +17,6 @@ const DashboardHeader = ({ title, subtitle }: { title: string; subtitle?: string
             className="pl-9 w-64 bg-card border-border"
           />
         </div>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-secondary" />
-        </Button>
         <Avatar className="h-9 w-9 border-2 border-border">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">TA</AvatarFallback>
         </Avatar>
