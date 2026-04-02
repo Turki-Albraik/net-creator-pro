@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  ArrowLeft, CalendarIcon, MapPin, Clock, Ruler, Train,
+  ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
   Printer, CheckCircle2, Download,
 } from "lucide-react";
 
@@ -474,7 +474,7 @@ const NewReservation = () => {
                         <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{r.departure_time} – {r.arrival_time}</span>
                           <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{r.distance_km} km</span>
-                          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{avail}/{r.total_seats} seats available</span>
+                          <span className="flex items-center gap-1"><Armchair className="h-3.5 w-3.5" />{avail}/{r.total_seats} seats available</span>
                         </div>
                       </button>
                     );

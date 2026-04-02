@@ -15,13 +15,15 @@ interface Schedule {
   arrival_time: string;
   total_seats: number;
   booked: number;
+  status: string;
 }
 
 const statusVariant = (status: string) => {
   switch (status) {
-    case "On Time": return "default" as const;
+    case "Active": return "default" as const;
+    case "on Maintenance": return "secondary" as const;
+    case "Inactive": return "destructive" as const;
     case "Full": return "secondary" as const;
-    case "Delayed": return "destructive" as const;
     default: return "outline" as const;
   }
 };
@@ -57,6 +59,7 @@ const TrainScheduleTable = () => {
         arrival_time: r.arrival_time,
         total_seats: r.total_seats,
         booked: bookedMap[r.id] || 0,
+        status: r.status || "Active",
       })));
     };
     fetchSchedules();
@@ -85,7 +88,8 @@ const TrainScheduleTable = () => {
           )}
           {schedules.map((s) => {
             const occupancy = s.total_seats > 0 ? (s.booked / s.total_seats) * 100 : 0;
-            const status = s.booked >= s.total_seats ? "Full" : "On Time";
+            // Show "Full" if all seats booked, otherwise show the status from schedules
+            const displayStatus = s.booked >= s.total_seats ? "Full" : s.status;
             return (
               <TableRow key={s.id}>
                 <TableCell className="font-mono font-medium text-foreground">{s.train_id}</TableCell>
@@ -101,7 +105,7 @@ const TrainScheduleTable = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant(status)}>{status}</Badge>
+                  <Badge variant={statusVariant(displayStatus)}>{displayStatus}</Badge>
                 </TableCell>
               </TableRow>
             );
