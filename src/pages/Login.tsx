@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Train } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import logoImg from "@/assets/logo.png";
 
 const Login = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -37,12 +37,10 @@ const Login = () => {
       <Card className="w-full max-w-md mx-4">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-              <Train className="h-7 w-7 text-primary-foreground" />
-            </div>
+            <img src={logoImg} alt="سِـكَّـة logo" className="h-14 w-14 rounded-xl object-cover" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">RailSync</CardTitle>
+            <CardTitle className="text-2xl font-bold">سِـكَّـة</CardTitle>
             <CardDescription className="mt-1">Sign in with your Employee ID</CardDescription>
           </div>
         </CardHeader>
@@ -50,22 +48,11 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="employeeId">Employee ID</Label>
-              <Input
-                id="employeeId"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                placeholder="Enter your employee ID"
-              />
+              <Input id="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter your employee ID" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-              />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}

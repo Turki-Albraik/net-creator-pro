@@ -5,22 +5,8 @@ import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { subDays, subWeeks, subMonths, isAfter, format } from "date-fns";
-
-const printChart = (title: string, ref: React.RefObject<HTMLDivElement>) => {
-  if (!ref.current) return;
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
-  const svg = ref.current.querySelector("svg");
-  const svgHtml = svg ? svg.outerHTML : "<p>No chart data</p>";
-  printWindow.document.write(`
-    <html><head><title>${title}</title>
-    <style>body{font-family:'Segoe UI',sans-serif;padding:40px;text-align:center;}h1{font-size:20px;margin-bottom:24px;}svg{max-width:100%;height:auto;}@media print{body{padding:20px;}}</style>
-    </head><body><h1>${title}</h1>${svgHtml}<script>window.print();</script></body></html>
-  `);
-  printWindow.document.close();
-};
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(210, 60%, 50%)", "hsl(30, 80%, 55%)", "hsl(150, 50%, 45%)"];
 
@@ -44,7 +30,6 @@ const Reports = () => {
 
       if (!reservations) return;
 
-      // Filter by period
       const now = new Date();
       let cutoff: Date | null = null;
       if (period === "daily") cutoff = subDays(now, 1);
@@ -55,7 +40,6 @@ const Reports = () => {
         ? (reservations as any[]).filter((r) => isAfter(new Date(r.created_at), cutoff!))
         : (reservations as any[]);
 
-      // Revenue by period
       const monthMap: Record<string, number> = {};
       filtered.forEach((r) => {
         const label = period === "daily"
@@ -67,7 +51,6 @@ const Reports = () => {
       });
       setRevenueData(Object.entries(monthMap).map(([month, revenue]) => ({ month, revenue })));
 
-      // Bookings by route
       const { data: routes } = await supabase.from("train_routes").select("id, source, destination, total_seats");
       const routeMap: Record<string, string> = {};
       const seatMap: Record<string, number> = {};
@@ -85,7 +68,6 @@ const Reports = () => {
       });
       setRouteData(Object.entries(routeCount).map(([route, bookings]) => ({ route, bookings })));
 
-      // Train utilization / occupancy
       const occData: { name: string; value: number }[] = [];
       if (routes) {
         (routes as any[]).forEach((r) => {
@@ -99,6 +81,30 @@ const Reports = () => {
     fetchData();
   }, [period]);
 
+  const handlePrintAll = () => {
+    const collectSvg = (ref: React.RefObject<HTMLDivElement>, title: string) => {
+      if (!ref.current) return `<h2>${title}</h2><p>No data</p>`;
+      const svg = ref.current.querySelector("svg");
+      return `<h2 style="margin-top:32px;">${title}</h2>${svg ? svg.outerHTML : "<p>No chart data</p>"}`;
+    };
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>سِـكَّـة - Reports</title>
+      <style>body{font-family:'Segoe UI',sans-serif;padding:40px;text-align:center;}h1{font-size:24px;margin-bottom:8px;}h2{font-size:18px;margin-bottom:16px;color:#333;}svg{max-width:100%;height:auto;}@media print{body{padding:20px;}}</style>
+      </head><body>
+      <h1>سِـكَّـة - Reports & Analytics</h1>
+      <p style="color:#888;margin-bottom:24px;">Period: ${period === "all" ? "All Time" : period}</p>
+      ${collectSvg(revenueRef, "Revenue by Period")}
+      ${collectSvg(routeRef, "Bookings by Route")}
+      ${collectSvg(occupancyRef, "Train Utilization Rate")}
+      <script>window.print();</script>
+      </body></html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -108,26 +114,28 @@ const Reports = () => {
             <h1 className="font-display text-2xl font-bold text-foreground">Reports & Analytics</h1>
             <p className="text-sm text-muted-foreground mt-1">Revenue analysis, booking trends, and train utilization</p>
           </div>
-          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Time period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily (Last 24h)</SelectItem>
-              <SelectItem value="weekly">Weekly (Last 7 days)</SelectItem>
-              <SelectItem value="monthly">Monthly (Last 30 days)</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Daily (Last 24h)</SelectItem>
+                <SelectItem value="weekly">Weekly (Last 7 days)</SelectItem>
+                <SelectItem value="monthly">Monthly (Last 30 days)</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button className="gap-2" onClick={handlePrintAll}>
+              <Printer className="h-4 w-4" /> Print All Reports
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="font-display text-lg">Revenue by Period</CardTitle>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printChart("Revenue by Period", revenueRef)}>
-                <Printer className="h-4 w-4" /> Print
-              </Button>
             </CardHeader>
             <CardContent ref={revenueRef}>
               {revenueData.length === 0 ? (
@@ -147,11 +155,8 @@ const Reports = () => {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="font-display text-lg">Bookings by Route</CardTitle>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printChart("Bookings by Route", routeRef)}>
-                <Printer className="h-4 w-4" /> Print
-              </Button>
             </CardHeader>
             <CardContent ref={routeRef}>
               {routeData.length === 0 ? (
@@ -171,11 +176,8 @@ const Reports = () => {
           </Card>
 
           <Card className="xl:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="font-display text-lg">Train Utilization Rate (%)</CardTitle>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => printChart("Train Utilization Rate", occupancyRef)}>
-                <Printer className="h-4 w-4" /> Print
-              </Button>
             </CardHeader>
             <CardContent ref={occupancyRef}>
               {occupancyData.length === 0 ? (
