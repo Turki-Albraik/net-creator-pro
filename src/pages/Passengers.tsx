@@ -46,12 +46,33 @@ const Passengers = () => {
 
   const handleUpdate = async () => {
     if (!editPassenger || !editForm.name.trim()) return;
+    const oldName = editPassenger.name;
+    const newName = editForm.name.trim();
+    const newEmail = editForm.email.trim() || null;
+    const newPhone = editForm.phone.trim() || null;
+
     const { error } = await supabase.from("passengers").update({
-      name: editForm.name.trim(),
-      email: editForm.email.trim() || null,
-      phone: editForm.phone.trim() || null,
+      name: newName,
+      email: newEmail,
+      phone: newPhone,
     } as any).eq("id", editPassenger.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+
+    // Sync name change to reservations
+    if (oldName !== newName) {
+      // Update reservations where passenger_name contains the old name
+      const { data: reservations } = await supabase
+        .from("reservations")
+        .select("id, passenger_name")
+        .like("passenger_name", `%${oldName}%`);
+      if (reservations) {
+        for (const r of reservations as any[]) {
+          const updatedName = r.passenger_name.replace(oldName, newName);
+          await supabase.from("reservations").update({ passenger_name: updatedName } as any).eq("id", r.id);
+        }
+      }
+    }
+
     toast({ title: "Passenger Updated" });
     setEditOpen(false);
     fetchPassengers();

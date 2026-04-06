@@ -27,6 +27,7 @@ interface TrainRoute {
   departure_time: string;
   arrival_time: string;
   total_seats: number;
+  status: string;
 }
 
 interface PassengerInfo {
@@ -37,6 +38,7 @@ interface PassengerInfo {
 }
 
 const countryCodes = [
+  { code: "+91", country: "India", flag: "🇮🇳" },
   { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
   { code: "+971", country: "UAE", flag: "🇦🇪" },
   { code: "+973", country: "Bahrain", flag: "🇧🇭" },
@@ -47,6 +49,43 @@ const countryCodes = [
   { code: "+962", country: "Jordan", flag: "🇯🇴" },
   { code: "+1", country: "USA", flag: "🇺🇸" },
   { code: "+44", country: "UK", flag: "🇬🇧" },
+  { code: "+49", country: "Germany", flag: "🇩🇪" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+39", country: "Italy", flag: "🇮🇹" },
+  { code: "+34", country: "Spain", flag: "🇪🇸" },
+  { code: "+81", country: "Japan", flag: "🇯🇵" },
+  { code: "+86", country: "China", flag: "🇨🇳" },
+  { code: "+82", country: "South Korea", flag: "🇰🇷" },
+  { code: "+61", country: "Australia", flag: "🇦🇺" },
+  { code: "+55", country: "Brazil", flag: "🇧🇷" },
+  { code: "+52", country: "Mexico", flag: "🇲🇽" },
+  { code: "+7", country: "Russia", flag: "🇷🇺" },
+  { code: "+27", country: "South Africa", flag: "🇿🇦" },
+  { code: "+90", country: "Turkey", flag: "🇹🇷" },
+  { code: "+62", country: "Indonesia", flag: "🇮🇩" },
+  { code: "+60", country: "Malaysia", flag: "🇲🇾" },
+  { code: "+65", country: "Singapore", flag: "🇸🇬" },
+  { code: "+63", country: "Philippines", flag: "🇵🇭" },
+  { code: "+66", country: "Thailand", flag: "🇹🇭" },
+  { code: "+84", country: "Vietnam", flag: "🇻🇳" },
+  { code: "+92", country: "Pakistan", flag: "🇵🇰" },
+  { code: "+880", country: "Bangladesh", flag: "🇧🇩" },
+  { code: "+94", country: "Sri Lanka", flag: "🇱🇰" },
+  { code: "+977", country: "Nepal", flag: "🇳🇵" },
+  { code: "+234", country: "Nigeria", flag: "🇳🇬" },
+  { code: "+254", country: "Kenya", flag: "🇰🇪" },
+  { code: "+256", country: "Uganda", flag: "🇺🇬" },
+  { code: "+255", country: "Tanzania", flag: "🇹🇿" },
+  { code: "+233", country: "Ghana", flag: "🇬🇭" },
+  { code: "+212", country: "Morocco", flag: "🇲🇦" },
+  { code: "+216", country: "Tunisia", flag: "🇹🇳" },
+  { code: "+213", country: "Algeria", flag: "🇩🇿" },
+  { code: "+964", country: "Iraq", flag: "🇮🇶" },
+  { code: "+961", country: "Lebanon", flag: "🇱🇧" },
+  { code: "+970", country: "Palestine", flag: "🇵🇸" },
+  { code: "+967", country: "Yemen", flag: "🇾🇪" },
+  { code: "+249", country: "Sudan", flag: "🇸🇩" },
+  { code: "+218", country: "Libya", flag: "🇱🇾" },
 ];
 
 type Step = "route" | "seats" | "confirm" | "ticket";
@@ -57,7 +96,7 @@ const validateEmail = (email: string) => {
 
 const validatePhone = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
-  return digits.length === 10;
+  return digits.length === 9;
 };
 
 const NewReservation = () => {
@@ -73,7 +112,8 @@ const NewReservation = () => {
   const [travelDate, setTravelDate] = useState<Date>();
   const [numTickets, setNumTickets] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "", phone: "", countryCode: "+966" }]);
+  const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "", phone: "", countryCode: "+91" }]);
+  const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,13 +122,12 @@ const NewReservation = () => {
 
   useEffect(() => {
     const fetchRoutes = async () => {
-      const { data } = await supabase.from("train_routes").select("*");
+      const { data } = await supabase.from("train_routes").select("*").eq("status", "Active");
       if (data) setRoutes(data as unknown as TrainRoute[]);
     };
     fetchRoutes();
   }, []);
 
-  // Fetch available seats counts for all routes on selected date
   useEffect(() => {
     if (!travelDate) return;
     const fetchCounts = async () => {
@@ -133,11 +172,10 @@ const NewReservation = () => {
     fetchBooked();
   }, [selectedRoute, travelDate]);
 
-  // Update passengers array when numTickets changes
   useEffect(() => {
     setPassengers((prev) => {
       if (numTickets > prev.length) {
-        return [...prev, ...Array(numTickets - prev.length).fill(null).map(() => ({ name: "", email: "", phone: "", countryCode: "+966" }))];
+        return [...prev, ...Array(numTickets - prev.length).fill(null).map(() => ({ name: "", email: "", phone: "", countryCode: "+91" }))];
       }
       return prev.slice(0, numTickets);
     });
@@ -169,7 +207,7 @@ const NewReservation = () => {
       const p = passengers[i];
       if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
       if (p.email && !validateEmail(p.email)) return `Passenger ${i + 1}: Email must contain @ and end with .com`;
-      if (p.phone && !validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 10 digits`;
+      if (p.phone && !validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
     }
     return null;
   };
@@ -203,7 +241,6 @@ const NewReservation = () => {
       return;
     }
 
-    // Add each passenger to passengers table
     for (const p of passengers) {
       const tripAmount = selectedRoute.price_per_ticket;
       const fullPhone = p.phone ? `${p.countryCode}${p.phone}` : null;
@@ -264,7 +301,7 @@ const NewReservation = () => {
         @media print { body { padding: 20px; } }
       </style></head><body>
       <div class="ticket">
-        <div class="header"><h1>🚄 Saudi Rail</h1><p>E-Ticket</p></div>
+        <div class="header"><h1>🚄 سِـكَّـة</h1><p>E-Ticket</p></div>
         <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
         <div class="row"><span class="label">Booking ID</span><span class="value">${bookingId}</span></div>
         ${passengersHtml}
@@ -272,6 +309,7 @@ const NewReservation = () => {
         <div class="row"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
         <div class="row"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
         <div class="row"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
+        <div class="row"><span class="label">Payment</span><span class="value">${paymentMethod}</span></div>
         <div class="seats">Seats: ${selectedSeats.join(", ")}</div>
         <div class="total">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</div>
       </div>
@@ -380,7 +418,6 @@ const NewReservation = () => {
           ))}
         </div>
 
-        {/* Step 1: Route Selection */}
         {step === "route" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -440,7 +477,7 @@ const NewReservation = () => {
             <div className="space-y-3">
               <h3 className="font-display text-lg font-semibold">Available Routes</h3>
               {filteredRoutes.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No routes found. Try different filters.</p>
+                <p className="text-muted-foreground text-sm">No active routes found. Try different filters.</p>
               ) : (
                 <div className="grid gap-3">
                   {filteredRoutes.map((r) => {
@@ -494,7 +531,6 @@ const NewReservation = () => {
           </div>
         )}
 
-        {/* Step 2: Seat Selection */}
         {step === "seats" && selectedRoute && (
           <div className="space-y-6">
             <div className="rounded-xl border border-border bg-card p-5">
@@ -527,7 +563,6 @@ const NewReservation = () => {
           </div>
         )}
 
-        {/* Step 3: Confirm - Multi-passenger */}
         {step === "confirm" && selectedRoute && (
           <div className="max-w-2xl space-y-6">
             <div className="rounded-xl border border-border bg-card p-6 space-y-6">
@@ -552,10 +587,10 @@ const NewReservation = () => {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Phone (10 digits)</Label>
+                    <Label>Phone (9 digits)</Label>
                     <div className="flex gap-2">
                       <Select value={p.countryCode} onValueChange={(v) => updatePassenger(i, "countryCode", v)}>
-                        <SelectTrigger className="w-40">
+                        <SelectTrigger className="w-44">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -569,20 +604,33 @@ const NewReservation = () => {
                       <Input 
                         value={p.phone} 
                         onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 9);
                           updatePassenger(i, "phone", val);
                         }} 
                         placeholder="5XXXXXXXX" 
-                        maxLength={10}
+                        maxLength={9}
                         className="flex-1"
                       />
                     </div>
                     {p.phone && !validatePhone(p.phone) && (
-                      <p className="text-xs text-destructive">Phone number must be exactly 10 digits</p>
+                      <p className="text-xs text-destructive">Phone number must be exactly 9 digits</p>
                     )}
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <h3 className="font-display font-semibold text-lg">Payment Method</h3>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Credit Card">Credit Card</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 space-y-3">
@@ -594,6 +642,7 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span>{selectedRoute.departure_time} – {selectedRoute.arrival_time}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span className="font-mono">{selectedSeats.join(", ")}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Tickets</span><span>{numTickets}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
                 <div className="border-t border-border my-2" />
                 <div className="flex justify-between text-base font-bold"><span>Total</span><span>SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span></div>
               </div>
@@ -609,12 +658,11 @@ const NewReservation = () => {
           </div>
         )}
 
-        {/* Step 4: Ticket */}
         {step === "ticket" && selectedRoute && (
           <div className="max-w-md mx-auto space-y-6">
             <div ref={ticketRef} className="rounded-2xl border-2 border-primary bg-card p-8 space-y-4">
               <div className="text-center border-b border-dashed border-border pb-4">
-                <h2 className="font-display text-xl font-bold text-foreground">🚄 Saudi Rail</h2>
+                <h2 className="font-display text-xl font-bold text-foreground">🚄 سِـكَّـة</h2>
                 <p className="text-xs text-muted-foreground">E-Ticket</p>
               </div>
               <div className="text-center py-3">
@@ -629,6 +677,7 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{travelDate ? format(travelDate, "PPP") : ""}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Departure</span><span>{selectedRoute.departure_time}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Arrival</span><span>{selectedRoute.arrival_time}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
               </div>
               <div className="bg-muted rounded-lg p-3 text-center font-mono font-bold text-foreground">
                 Seats: {selectedSeats.join(", ")}

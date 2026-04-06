@@ -1,9 +1,10 @@
-import { Train, LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import logoImg from "@/assets/logo.png";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/", adminOnly: false },
@@ -27,7 +28,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Collapsed toggle button — only visible when sidebar is hidden */}
       {!isOpen && (
         <Button
           variant="ghost"
@@ -39,18 +39,15 @@ const Sidebar = () => {
         </Button>
       )}
 
-      {/* Sidebar */}
       <aside className={cn(
         "fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between px-6 py-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Train className="h-5 w-5 text-sidebar-primary-foreground" />
-            </div>
+            <img src={logoImg} alt="سِـكَّـة logo" className="h-10 w-10 rounded-lg object-cover" />
             <div>
-              <h1 className="font-display text-lg font-bold text-sidebar-foreground">RailSync</h1>
+              <h1 className="font-display text-lg font-bold text-sidebar-foreground">سِـكَّـة</h1>
               <p className="text-xs text-sidebar-foreground/60">Management System</p>
             </div>
           </div>

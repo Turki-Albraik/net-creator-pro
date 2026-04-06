@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, XCircle } from "lucide-react";
+import { Plus, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Sidebar from "@/components/Sidebar";
@@ -76,16 +76,6 @@ const Reservations = () => {
     fetchReservations();
   };
 
-  const handleDelete = async (id: string, bookingId: string) => {
-    const { error } = await supabase.from("reservations").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({ title: "Reservation Deleted", description: `${bookingId} has been removed` });
-    fetchReservations();
-  };
-
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -136,9 +126,6 @@ const Reservations = () => {
                           <XCircle className="h-4 w-4 text-secondary" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" title="Delete reservation" onClick={() => handleDelete(r.id, r.booking_id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

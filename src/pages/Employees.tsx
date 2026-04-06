@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Pencil, Eye, EyeOff } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -28,6 +28,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
   const { toast } = useToast();
 
@@ -38,26 +39,52 @@ const Employees = () => {
 
   useEffect(() => { fetchEmployees(); }, []);
 
-  const handleAdd = async () => {
+  const openAdd = () => {
+    setEditId(null);
+    setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
+    setOpen(true);
+  };
+
+  const openEdit = (emp: Employee) => {
+    setEditId(emp.id);
+    setForm({
+      employee_id: emp.employee_id,
+      name: emp.name,
+      password: emp.password,
+      role: emp.role,
+      email: emp.email || "",
+      phone: emp.phone || "",
+    });
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!form.employee_id || !form.name || !form.password) {
       toast({ title: "Error", description: "ID, Name and Password are required", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("employees").insert({
+
+    const payload = {
       employee_id: form.employee_id,
       name: form.name,
       password: form.password,
       role: form.role,
       email: form.email || null,
       phone: form.phone || null,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
+    };
+
+    if (editId) {
+      const { error } = await supabase.from("employees").update(payload as any).eq("id", editId);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Employee Updated", description: `${form.name} has been updated` });
+    } else {
+      const { error } = await supabase.from("employees").insert(payload);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     }
-    toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
     setOpen(false);
+    setEditId(null);
     fetchEmployees();
   };
 
@@ -86,13 +113,13 @@ const Employees = () => {
         <DashboardHeader title="Employees" subtitle="Manage your team members" />
 
         <div className="flex gap-3 mt-6">
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditId(null); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>
+              <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Employee</DialogTitle>
+                <DialogTitle>{editId ? "Edit Employee" : "Add New Employee"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -129,7 +156,7 @@ const Employees = () => {
                     <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+966..." />
                   </div>
                 </div>
-                <Button onClick={handleAdd} className="w-full">Add Employee</Button>
+                <Button onClick={handleSave} className="w-full">{editId ? "Update Employee" : "Add Employee"}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -167,9 +194,14 @@ const Employees = () => {
                       <TableCell>{emp.email || "—"}</TableCell>
                       <TableCell>{emp.phone || "—"}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(emp.id, emp.name)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(emp)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(emp.id, emp.name)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

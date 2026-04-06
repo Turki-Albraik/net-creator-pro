@@ -33,7 +33,7 @@ const emptyForm = {
 
 const statusColor = (s: string) => {
   if (s === "Active") return "default" as const;
-  if (s === "on Maintenance") return "secondary" as const;
+  if (s === "Maintenance") return "secondary" as const;
   return "destructive" as const;
 };
 
@@ -129,7 +129,7 @@ const Schedules = () => {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="on Maintenance">on Maintenance</SelectItem>
+                        <SelectItem value="Maintenance">Maintenance</SelectItem>
                         <SelectItem value="Inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
