@@ -91,7 +91,7 @@ const countryCodes = [
 type Step = "route" | "seats" | "confirm" | "ticket";
 
 const validateEmail = (email: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.includes("@") && email.endsWith(".com");
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 };
 
 const validatePhone = (phone: string) => {
@@ -206,8 +206,10 @@ const NewReservation = () => {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
       if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
-      if (p.email && !validateEmail(p.email)) return `Passenger ${i + 1}: Email must contain @ and end with .com`;
-      if (p.phone && !validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
+      if (!p.email.trim()) return `Passenger ${i + 1}: Email is required`;
+      if (!validateEmail(p.email)) return `Passenger ${i + 1}: Please enter a valid email address`;
+      if (!p.phone.trim()) return `Passenger ${i + 1}: Phone number is required`;
+      if (!validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
     }
     return null;
   };
@@ -575,7 +577,7 @@ const NewReservation = () => {
                     <Input value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} placeholder="e.g. Ahmed Al-Farsi" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Email (must include @ and end with .com)</Label>
+                    <Label>Email *</Label>
                     <Input 
                       type="email" 
                       value={p.email} 
@@ -583,11 +585,11 @@ const NewReservation = () => {
                       placeholder="e.g. ahmed@email.com" 
                     />
                     {p.email && !validateEmail(p.email) && (
-                      <p className="text-xs text-destructive">Email must contain @ and end with .com</p>
+                      <p className="text-xs text-destructive">Please enter a valid email address</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Phone (9 digits)</Label>
+                    <Label>Phone (9 digits) *</Label>
                     <div className="flex gap-2">
                       <Select value={p.countryCode} onValueChange={(v) => updatePassenger(i, "countryCode", v)}>
                         <SelectTrigger className="w-44">

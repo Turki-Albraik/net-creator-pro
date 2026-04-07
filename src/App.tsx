@@ -13,15 +13,39 @@ import Reports from "./pages/Reports.tsx";
 import Employees from "./pages/Employees.tsx";
 import Settings from "./pages/Settings.tsx";
 import Login from "./pages/Login.tsx";
+import Signup from "./pages/Signup.tsx";
+import MyReservations from "./pages/MyReservations.tsx";
+import MyProfile from "./pages/MyProfile.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => {
+const ProtectedRoute = ({ children, adminOnly = false, allowPassenger = false }: { children: React.ReactNode; adminOnly?: boolean; allowPassenger?: boolean }) => {
   const { isAuthenticated, employee } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  const isPassenger = employee?.role === "Passenger";
+  
+  // Admin-only routes
   if (adminOnly && employee?.role !== "Railway Administrator") return <Navigate to="/" replace />;
+  
+  // Routes that don't allow passengers (admin-only pages)
+  if (!allowPassenger && isPassenger) return <Navigate to="/my-reservations" replace />;
+  
   return <>{children}</>;
+};
+
+const PassengerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, employee } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (employee?.role !== "Passenger") return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
+const SmartHome = () => {
+  const { employee } = useAuth();
+  if (employee?.role === "Passenger") return <Navigate to="/my-reservations" replace />;
+  return <Index />;
 };
 
 const App = () => (
@@ -33,14 +57,17 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/" element={<ProtectedRoute allowPassenger><SmartHome /></ProtectedRoute>} />
             <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
             <Route path="/reservations" element={<ProtectedRoute><Reservations /></ProtectedRoute>} />
-            <Route path="/reservations/new" element={<ProtectedRoute><NewReservation /></ProtectedRoute>} />
+            <Route path="/reservations/new" element={<ProtectedRoute allowPassenger><NewReservation /></ProtectedRoute>} />
             <Route path="/passengers" element={<ProtectedRoute><Passengers /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute adminOnly><Employees /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute allowPassenger><Settings /></ProtectedRoute>} />
+            <Route path="/my-reservations" element={<PassengerRoute><MyReservations /></PassengerRoute>} />
+            <Route path="/my-profile" element={<PassengerRoute><MyProfile /></PassengerRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,14 +41,14 @@ const Login = () => {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">سِـكَّـة</CardTitle>
-            <CardDescription className="mt-1">Sign in with your Employee ID</CardDescription>
+            <CardDescription className="mt-1">Sign in with your ID</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="employeeId">Employee ID</Label>
-              <Input id="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter your employee ID" />
+              <Label htmlFor="employeeId">ID</Label>
+              <Input id="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter your ID" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -57,6 +57,10 @@ const Login = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              New passenger?{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">Create an account</Link>
+            </p>
           </form>
         </CardContent>
       </Card>
