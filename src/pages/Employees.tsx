@@ -133,7 +133,7 @@ const Employees = () => {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Railway Administrator">Railway Administrator</SelectItem>
-                        <SelectItem value="Railway Staff">Railway Staff</SelectItem>
+                        <SelectItem value="Passenger">Passenger</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

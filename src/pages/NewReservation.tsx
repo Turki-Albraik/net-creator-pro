@@ -206,8 +206,10 @@ const NewReservation = () => {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
       if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
-      if (p.email && !validateEmail(p.email)) return `Passenger ${i + 1}: Email must contain @ and end with .com`;
-      if (p.phone && !validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
+      if (!p.email.trim()) return `Passenger ${i + 1}: Email is required`;
+      if (!validateEmail(p.email)) return `Passenger ${i + 1}: Please enter a valid email address`;
+      if (!p.phone.trim()) return `Passenger ${i + 1}: Phone number is required`;
+      if (!validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
     }
     return null;
   };
