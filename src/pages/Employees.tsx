@@ -29,7 +29,7 @@ const Employees = () => {
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -41,7 +41,7 @@ const Employees = () => {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
     setOpen(true);
   };
 
@@ -82,7 +82,7 @@ const Employees = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     }
-    setForm({ employee_id: "", name: "", password: "", role: "Railway Staff", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
     setOpen(false);
     setEditId(null);
     fetchEmployees();
@@ -101,8 +101,8 @@ const Employees = () => {
   const roleBadgeVariant = (role: string) => {
     switch (role) {
       case "Railway Administrator": return "destructive";
-      case "Railway Staff": return "default";
-      default: return "secondary";
+      case "Passenger": return "secondary";
+      default: return "default";
     }
   };
 
