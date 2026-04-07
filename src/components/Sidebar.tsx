@@ -1,4 +1,4 @@
-import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,14 +6,21 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logoImg from "@/assets/logo.png";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", to: "/", adminOnly: false },
-  { icon: CalendarClock, label: "Schedules", to: "/schedules", adminOnly: false },
-  { icon: TicketCheck, label: "Reservations", to: "/reservations", adminOnly: false },
-  { icon: Users, label: "Passengers", to: "/passengers", adminOnly: false },
-  { icon: UserCog, label: "Employees", to: "/employees", adminOnly: true },
-  { icon: BarChart3, label: "Reports", to: "/reports", adminOnly: false },
-  { icon: Settings, label: "Settings", to: "/settings", adminOnly: false },
+const adminNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", to: "/" },
+  { icon: CalendarClock, label: "Schedules", to: "/schedules" },
+  { icon: TicketCheck, label: "Reservations", to: "/reservations" },
+  { icon: Users, label: "Passengers", to: "/passengers" },
+  { icon: UserCog, label: "Employees", to: "/employees" },
+  { icon: BarChart3, label: "Reports", to: "/reports" },
+  { icon: Settings, label: "Settings", to: "/settings" },
+];
+
+const passengerNavItems = [
+  { icon: TicketCheck, label: "New Reservation", to: "/reservations/new" },
+  { icon: History, label: "My Reservations", to: "/my-reservations" },
+  { icon: User, label: "My Profile", to: "/my-profile" },
+  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 const Sidebar = () => {
@@ -25,6 +32,9 @@ const Sidebar = () => {
     logout();
     navigate("/login");
   };
+
+  const isPassenger = employee?.role === "Passenger";
+  const navItems = isPassenger ? passengerNavItems : adminNavItems;
 
   return (
     <>
@@ -62,7 +72,7 @@ const Sidebar = () => {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.filter((item) => !item.adminOnly || employee?.role === "Railway Administrator").map((item) => (
+          {navItems.map((item) => (
             <RouterNavLink
               key={item.to}
               to={item.to}
