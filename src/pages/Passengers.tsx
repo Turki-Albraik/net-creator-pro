@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -21,6 +22,30 @@ interface Passenger {
   total_spent: number;
 }
 
+const countryCodes = [
+  { code: "+91", country: "India", flag: "🇮🇳" },
+  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+971", country: "UAE", flag: "🇦🇪" },
+  { code: "+973", country: "Bahrain", flag: "🇧🇭" },
+  { code: "+965", country: "Kuwait", flag: "🇰🇼" },
+  { code: "+968", country: "Oman", flag: "🇴🇲" },
+  { code: "+974", country: "Qatar", flag: "🇶🇦" },
+  { code: "+20", country: "Egypt", flag: "🇪🇬" },
+  { code: "+962", country: "Jordan", flag: "🇯🇴" },
+  { code: "+1", country: "USA", flag: "🇺🇸" },
+  { code: "+44", country: "UK", flag: "🇬🇧" },
+  { code: "+49", country: "Germany", flag: "🇩🇪" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+81", country: "Japan", flag: "🇯🇵" },
+  { code: "+86", country: "China", flag: "🇨🇳" },
+  { code: "+61", country: "Australia", flag: "🇦🇺" },
+  { code: "+55", country: "Brazil", flag: "🇧🇷" },
+  { code: "+92", country: "Pakistan", flag: "🇵🇰" },
+];
+
+const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+const validatePhone = (phone: string) => phone.replace(/\D/g, "").length === 9;
+
 const getInitials = (name: string) =>
   name.split(" ").filter(Boolean).map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 
@@ -28,7 +53,7 @@ const Passengers = () => {
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [editPassenger, setEditPassenger] = useState<Passenger | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", countryCode: "+91" });
   const { toast } = useToast();
 
   const fetchPassengers = async () => {
@@ -40,16 +65,32 @@ const Passengers = () => {
 
   const openEdit = (p: Passenger) => {
     setEditPassenger(p);
-    setEditForm({ name: p.name, email: p.email || "", phone: p.phone || "" });
+    const fullPhone = p.phone || "";
+    const matched = countryCodes.find((cc) => fullPhone.startsWith(cc.code));
+    setEditForm({
+      name: p.name,
+      email: p.email || "",
+      phone: matched ? fullPhone.slice(matched.code.length) : fullPhone,
+      countryCode: matched?.code || "+91",
+    });
     setEditOpen(true);
   };
 
   const handleUpdate = async () => {
     if (!editPassenger || !editForm.name.trim()) return;
+    if (editForm.email && !validateEmail(editForm.email)) {
+      toast({ title: "Error", description: "Please enter a valid email", variant: "destructive" });
+      return;
+    }
+    if (editForm.phone && !validatePhone(editForm.phone)) {
+      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
+      return;
+    }
+
     const oldName = editPassenger.name;
     const newName = editForm.name.trim();
     const newEmail = editForm.email.trim() || null;
-    const newPhone = editForm.phone.trim() || null;
+    const newPhone = editForm.phone ? `${editForm.countryCode}${editForm.phone}` : null;
 
     const { error } = await supabase.from("passengers").update({
       name: newName,
@@ -58,9 +99,7 @@ const Passengers = () => {
     } as any).eq("id", editPassenger.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
 
-    // Sync name change to reservations
     if (oldName !== newName) {
-      // Update reservations where passenger_name contains the old name
       const { data: reservations } = await supabase
         .from("reservations")
         .select("id, passenger_name")
@@ -99,8 +138,32 @@ const Passengers = () => {
             <DialogHeader><DialogTitle>Edit Passenger</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2"><Label>Name</Label><Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Email</Label><Input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+                {editForm.email && !validateEmail(editForm.email) && <p className="text-xs text-destructive">Please enter a valid email</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Phone (9 digits)</Label>
+                <div className="flex gap-2">
+                  <Select value={editForm.countryCode} onValueChange={(v) => setEditForm({ ...editForm, countryCode: v })}>
+                    <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((cc) => (
+                        <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })}
+                    placeholder="5XXXXXXXX"
+                    maxLength={9}
+                    className="flex-1"
+                  />
+                </div>
+                {editForm.phone && !validatePhone(editForm.phone) && <p className="text-xs text-destructive">Phone must be exactly 9 digits</p>}
+              </div>
               <Button onClick={handleUpdate} className="w-full">Save Changes</Button>
             </div>
           </DialogContent>
