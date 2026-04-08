@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX idx_employees_email_unique ON public.employees (email) WHERE email IS NOT NULL;
