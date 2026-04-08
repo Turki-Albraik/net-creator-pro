@@ -33,7 +33,7 @@ const Employees = () => {
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
-    const { data } = await supabase.from("employees").select("*").order("created_at", { ascending: true });
+    const { data } = await supabase.from("employees").select("*").neq("role", "Passenger").order("created_at", { ascending: true });
     if (data) setEmployees(data as Employee[]);
   };
 
