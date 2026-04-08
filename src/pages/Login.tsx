@@ -28,7 +28,7 @@ const Login = () => {
     if (success) {
       navigate("/");
     } else {
-      toast({ title: "Login Failed", description: "Invalid employee ID or password", variant: "destructive" });
+      toast({ title: "Login Failed", description: "Invalid ID/email or password", variant: "destructive" });
     }
   };
 
@@ -41,14 +41,14 @@ const Login = () => {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">سِـكَّـة</CardTitle>
-            <CardDescription className="mt-1">Sign in with your ID</CardDescription>
+            <CardDescription className="mt-1">Sign in with your ID or Email</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="employeeId">ID</Label>
-              <Input id="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter your ID" />
+              <Label htmlFor="employeeId">ID / Email</Label>
+              <Input id="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter your ID or email" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

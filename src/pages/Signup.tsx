@@ -9,26 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import logoImg from "@/assets/logo.png";
 
-const countryCodes = [
-  { code: "+91", country: "India", flag: "🇮🇳" },
-  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
-  { code: "+971", country: "UAE", flag: "🇦🇪" },
-  { code: "+973", country: "Bahrain", flag: "🇧🇭" },
-  { code: "+965", country: "Kuwait", flag: "🇰🇼" },
-  { code: "+968", country: "Oman", flag: "🇴🇲" },
-  { code: "+974", country: "Qatar", flag: "🇶🇦" },
-  { code: "+20", country: "Egypt", flag: "🇪🇬" },
-  { code: "+962", country: "Jordan", flag: "🇯🇴" },
-  { code: "+1", country: "USA", flag: "🇺🇸" },
-  { code: "+44", country: "UK", flag: "🇬🇧" },
-  { code: "+49", country: "Germany", flag: "🇩🇪" },
-  { code: "+33", country: "France", flag: "🇫🇷" },
-  { code: "+81", country: "Japan", flag: "🇯🇵" },
-  { code: "+86", country: "China", flag: "🇨🇳" },
-  { code: "+61", country: "Australia", flag: "🇦🇺" },
-  { code: "+55", country: "Brazil", flag: "🇧🇷" },
-  { code: "+92", country: "Pakistan", flag: "🇵🇰" },
-];
+import { countryCodes } from "@/lib/countryCodes";
 
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePhone = (phone: string) => phone.replace(/\D/g, "").length === 9;
@@ -37,7 +18,7 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  const [countryCode, setCountryCode] = useState("+966");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();

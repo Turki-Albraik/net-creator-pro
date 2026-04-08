@@ -32,13 +32,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = async (employeeId: string, password: string): Promise<boolean> => {
+  const login = async (identifier: string, password: string): Promise<boolean> => {
     const { supabase } = await import("@/integrations/supabase/client");
-    const { data, error } = await supabase
+    
+    // Try by employee_id first (for admins), then by email (for passengers)
+    let { data, error } = await supabase
       .from("employees")
       .select("id, employee_id, name, role, password")
-      .eq("employee_id", employeeId)
+      .eq("employee_id", identifier)
       .single();
+
+    if (error || !data) {
+      const result = await supabase
+        .from("employees")
+        .select("id, employee_id, name, role, password")
+        .eq("email", identifier)
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error || !data || data.password !== password) {
       return false;

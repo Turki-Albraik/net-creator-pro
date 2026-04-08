@@ -5,7 +5,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +29,11 @@ const Employees = () => {
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", phone: "" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
-    const { data } = await supabase.from("employees").select("*").order("created_at", { ascending: true });
+    const { data } = await supabase.from("employees").select("*").neq("role", "Passenger").order("created_at", { ascending: true });
     if (data) setEmployees(data as Employee[]);
   };
 
@@ -41,7 +41,7 @@ const Employees = () => {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", phone: "" });
     setOpen(true);
   };
 
@@ -51,26 +51,30 @@ const Employees = () => {
       employee_id: emp.employee_id,
       name: emp.name,
       password: emp.password,
-      role: emp.role,
-      email: emp.email || "",
       phone: emp.phone || "",
     });
     setOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.employee_id || !form.name || !form.password) {
-      toast({ title: "Error", description: "ID, Name and Password are required", variant: "destructive" });
+    if (!form.employee_id || !form.name || !form.password || !form.phone) {
+      toast({ title: "Error", description: "ID, Name, Password and Phone are required", variant: "destructive" });
       return;
     }
+    if (form.phone.replace(/\D/g, "").length !== 9) {
+      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
+      return;
+    }
+
+    const autoEmail = `${form.employee_id}@sikkah.com`;
 
     const payload = {
       employee_id: form.employee_id,
       name: form.name,
       password: form.password,
-      role: form.role,
-      email: form.email || null,
-      phone: form.phone || null,
+      role: "Railway Administrator",
+      email: autoEmail,
+      phone: form.phone,
     };
 
     if (editId) {
@@ -82,7 +86,7 @@ const Employees = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     }
-    setForm({ employee_id: "", name: "", password: "", role: "Passenger", email: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", phone: "" });
     setOpen(false);
     setEditId(null);
     fetchEmployees();
@@ -122,39 +126,25 @@ const Employees = () => {
                 <DialogTitle>{editId ? "Edit Employee" : "Add New Employee"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Employee ID</Label>
-                    <Input value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. 2" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Railway Administrator">Railway Administrator</SelectItem>
-                        <SelectItem value="Passenger">Passenger</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Employee ID *</Label>
+                  <Input value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. 2" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label>Email (auto-generated)</Label>
+                  <Input value={form.employee_id ? `${form.employee_id}@sikkah.com` : ""} disabled className="bg-muted" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Full Name *</Label>
                   <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Password</Label>
+                  <Label>Password *</Label>
                   <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Set a password" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Email (optional)</Label>
-                    <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Phone (optional)</Label>
-                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+966..." />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Phone (9 digits) *</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })} placeholder="5XXXXXXXX" maxLength={9} />
                 </div>
                 <Button onClick={handleSave} className="w-full">{editId ? "Update Employee" : "Add Employee"}</Button>
               </div>
