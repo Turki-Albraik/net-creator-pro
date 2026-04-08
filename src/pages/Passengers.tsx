@@ -34,7 +34,7 @@ const Passengers = () => {
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [editPassenger, setEditPassenger] = useState<Passenger | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", countryCode: "+91" });
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", countryCode: "+966" });
   const { toast } = useToast();
 
   const fetchPassengers = async () => {
@@ -52,7 +52,7 @@ const Passengers = () => {
       name: p.name,
       email: p.email || "",
       phone: matched ? fullPhone.slice(matched.code.length) : fullPhone,
-      countryCode: matched?.code || "+91",
+      countryCode: matched?.code || "+966",
     });
     setEditOpen(true);
   };

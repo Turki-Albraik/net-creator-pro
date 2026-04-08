@@ -33,8 +33,6 @@ interface TrainRoute {
 interface PassengerInfo {
   name: string;
   email: string;
-  phone: string;
-  countryCode: string;
 }
 
 import { countryCodes } from "@/lib/countryCodes";
@@ -63,7 +61,9 @@ const NewReservation = () => {
   const [travelDate, setTravelDate] = useState<Date>();
   const [numTickets, setNumTickets] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "", phone: "", countryCode: "+91" }]);
+  const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "" }]);
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactCountryCode, setContactCountryCode] = useState("+966");
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,7 +126,7 @@ const NewReservation = () => {
   useEffect(() => {
     setPassengers((prev) => {
       if (numTickets > prev.length) {
-        return [...prev, ...Array(numTickets - prev.length).fill(null).map(() => ({ name: "", email: "", phone: "", countryCode: "+91" }))];
+        return [...prev, ...Array(numTickets - prev.length).fill(null).map(() => ({ name: "", email: "" }))];
       }
       return prev.slice(0, numTickets);
     });
@@ -154,13 +154,13 @@ const NewReservation = () => {
   };
 
   const validateAllPassengers = (): string | null => {
+    if (!contactPhone.trim()) return "Contact phone number is required";
+    if (!validatePhone(contactPhone)) return "Contact phone must be exactly 9 digits";
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
       if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
       if (!p.email.trim()) return `Passenger ${i + 1}: Email is required`;
       if (!validateEmail(p.email)) return `Passenger ${i + 1}: Please enter a valid email address`;
-      if (!p.phone.trim()) return `Passenger ${i + 1}: Phone number is required`;
-      if (!validatePhone(p.phone)) return `Passenger ${i + 1}: Phone must be exactly 9 digits`;
     }
     return null;
   };
@@ -179,7 +179,7 @@ const NewReservation = () => {
       booking_id: newBookingId,
       passenger_name: passengers.map((p) => p.name.trim()).join(", "),
       passenger_email: passengers[0].email.trim() || null,
-      passenger_phone: passengers[0].phone ? `${passengers[0].countryCode}${passengers[0].phone}` : null,
+      passenger_phone: contactPhone ? `${contactCountryCode}${contactPhone}` : null,
       route_id: selectedRoute.id,
       travel_date: format(travelDate, "yyyy-MM-dd"),
       seat_numbers: selectedSeats,
@@ -194,9 +194,10 @@ const NewReservation = () => {
       return;
     }
 
-    for (const p of passengers) {
+    for (let pi = 0; pi < passengers.length; pi++) {
+      const p = passengers[pi];
       const tripAmount = selectedRoute.price_per_ticket;
-      const fullPhone = p.phone ? `${p.countryCode}${p.phone}` : null;
+      const fullPhone = pi === 0 && contactPhone ? `${contactCountryCode}${contactPhone}` : null;
 
       const { data: existing } = await supabase
         .from("passengers")
@@ -539,38 +540,39 @@ const NewReservation = () => {
                       <p className="text-xs text-destructive">Please enter a valid email address</p>
                     )}
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Phone (9 digits) *</Label>
-                    <div className="flex gap-2">
-                      <Select value={p.countryCode} onValueChange={(v) => updatePassenger(i, "countryCode", v)}>
-                        <SelectTrigger className="w-44">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countryCodes.map((cc) => (
-                            <SelectItem key={cc.code} value={cc.code}>
-                              {cc.flag} {cc.code} {cc.country}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        value={p.phone} 
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(0, 9);
-                          updatePassenger(i, "phone", val);
-                        }} 
-                        placeholder="5XXXXXXXX" 
-                        maxLength={9}
-                        className="flex-1"
-                      />
-                    </div>
-                    {p.phone && !validatePhone(p.phone) && (
-                      <p className="text-xs text-destructive">Phone number must be exactly 9 digits</p>
-                    )}
-                  </div>
                 </div>
               ))}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <h3 className="font-display font-semibold text-lg">Contact Information</h3>
+              <div className="space-y-1.5">
+                <Label>Phone (9 digits) *</Label>
+                <div className="flex gap-2">
+                  <Select value={contactCountryCode} onValueChange={setContactCountryCode}>
+                    <SelectTrigger className="w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((cc) => (
+                        <SelectItem key={cc.code} value={cc.code}>
+                          {cc.flag} {cc.code} {cc.country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    value={contactPhone} 
+                    onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="5XXXXXXXX" 
+                    maxLength={9}
+                    className="flex-1"
+                  />
+                </div>
+                {contactPhone && !validatePhone(contactPhone) && (
+                  <p className="text-xs text-destructive">Phone number must be exactly 9 digits</p>
+                )}
+              </div>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 space-y-4">

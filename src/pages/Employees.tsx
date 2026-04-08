@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Pencil, Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { countryCodes } from "@/lib/countryCodes";
 
 interface Employee {
   id: string;
@@ -29,7 +31,7 @@ const Employees = () => {
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", phone: "" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -41,17 +43,20 @@ const Employees = () => {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ employee_id: "", name: "", password: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
     setOpen(true);
   };
 
   const openEdit = (emp: Employee) => {
     setEditId(emp.id);
+    const fullPhone = emp.phone || "";
+    const matched = countryCodes.find((cc) => fullPhone.startsWith(cc.code));
     setForm({
       employee_id: emp.employee_id,
       name: emp.name,
       password: emp.password,
-      phone: emp.phone || "",
+      phone: matched ? fullPhone.slice(matched.code.length) : fullPhone,
+      countryCode: matched?.code || "+966",
     });
     setOpen(true);
   };
@@ -74,7 +79,7 @@ const Employees = () => {
       password: form.password,
       role: "Railway Administrator",
       email: autoEmail,
-      phone: form.phone,
+      phone: `${form.countryCode}${form.phone}`,
     };
 
     if (editId) {
@@ -86,7 +91,7 @@ const Employees = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     }
-    setForm({ employee_id: "", name: "", password: "", phone: "" });
+    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
     setOpen(false);
     setEditId(null);
     fetchEmployees();
@@ -144,7 +149,17 @@ const Employees = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Phone (9 digits) *</Label>
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })} placeholder="5XXXXXXXX" maxLength={9} />
+                  <div className="flex gap-2">
+                    <Select value={form.countryCode} onValueChange={(v) => setForm({ ...form, countryCode: v })}>
+                      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {countryCodes.map((cc) => (
+                          <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })} placeholder="5XXXXXXXX" maxLength={9} className="flex-1" />
+                  </div>
                 </div>
                 <Button onClick={handleSave} className="w-full">{editId ? "Update Employee" : "Add Employee"}</Button>
               </div>
