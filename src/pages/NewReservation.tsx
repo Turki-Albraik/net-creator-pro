@@ -540,38 +540,39 @@ const NewReservation = () => {
                       <p className="text-xs text-destructive">Please enter a valid email address</p>
                     )}
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Phone (9 digits) *</Label>
-                    <div className="flex gap-2">
-                      <Select value={p.countryCode} onValueChange={(v) => updatePassenger(i, "countryCode", v)}>
-                        <SelectTrigger className="w-44">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countryCodes.map((cc) => (
-                            <SelectItem key={cc.code} value={cc.code}>
-                              {cc.flag} {cc.code} {cc.country}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        value={p.phone} 
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(0, 9);
-                          updatePassenger(i, "phone", val);
-                        }} 
-                        placeholder="5XXXXXXXX" 
-                        maxLength={9}
-                        className="flex-1"
-                      />
-                    </div>
-                    {p.phone && !validatePhone(p.phone) && (
-                      <p className="text-xs text-destructive">Phone number must be exactly 9 digits</p>
-                    )}
-                  </div>
                 </div>
               ))}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <h3 className="font-display font-semibold text-lg">Contact Information</h3>
+              <div className="space-y-1.5">
+                <Label>Phone (9 digits) *</Label>
+                <div className="flex gap-2">
+                  <Select value={contactCountryCode} onValueChange={setContactCountryCode}>
+                    <SelectTrigger className="w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((cc) => (
+                        <SelectItem key={cc.code} value={cc.code}>
+                          {cc.flag} {cc.code} {cc.country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    value={contactPhone} 
+                    onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="5XXXXXXXX" 
+                    maxLength={9}
+                    className="flex-1"
+                  />
+                </div>
+                {contactPhone && !validatePhone(contactPhone) && (
+                  <p className="text-xs text-destructive">Phone number must be exactly 9 digits</p>
+                )}
+              </div>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 space-y-4">
