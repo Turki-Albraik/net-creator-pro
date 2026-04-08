@@ -20,7 +20,7 @@ const MyProfile = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  const [countryCode, setCountryCode] = useState("+966");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
