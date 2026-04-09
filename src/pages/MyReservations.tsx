@@ -53,10 +53,10 @@ const MyReservations = () => {
   // Bug #4 — Use booked_by instead of name matching
   const fetchReservations = async () => {
     if (!employee) return;
-    const { data } = await supabase
+    const { data } = await (supabase
       .from("reservations")
-      .select("*")
-      .eq("booked_by" as any, employee.id)
+      .select("*") as any)
+      .eq("booked_by", employee.id)
       .order("created_at", { ascending: false });
 
     if (!data) return;
