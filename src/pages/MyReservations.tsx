@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 interface Reservation {
   id: string;
@@ -51,17 +50,22 @@ const MyReservations = () => {
   const [newSeats, setNewSeats] = useState<string[]>([]);
   const [routeInfo, setRouteInfo] = useState<TrainRoute | null>(null);
 
+  // Bug #4 — Use booked_by instead of name matching
   const fetchReservations = async () => {
     if (!employee) return;
-    const { data } = await supabase
+    const { data } = await (supabase
       .from("reservations")
-      .select("*")
-      .ilike("passenger_name", `%${employee.name}%`)
+      .select("*") as any)
+      .eq("booked_by", employee.id)
       .order("created_at", { ascending: false });
 
     if (!data) return;
 
     const routeIds = [...new Set((data as any[]).map((d) => d.route_id))];
+    if (routeIds.length === 0) {
+      setReservations([]);
+      return;
+    }
     const { data: routes } = await supabase
       .from("train_routes")
       .select("id, source, destination, train_id")
@@ -80,7 +84,14 @@ const MyReservations = () => {
 
   useEffect(() => { fetchReservations(); }, [employee]);
 
+  // Bug #3 — Update passenger stats on cancel
   const handleCancel = async (id: string, bookingId: string) => {
+    const { data: resData } = await supabase
+      .from("reservations")
+      .select("total_amount, passenger_name, num_tickets")
+      .eq("id", id)
+      .single();
+
     const { error } = await supabase
       .from("reservations")
       .update({ status: "Cancelled" } as any)
@@ -89,10 +100,30 @@ const MyReservations = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+
+    if (resData) {
+      const names = (resData as any).passenger_name.split(", ");
+      const perTicketAmount = Number((resData as any).total_amount) / ((resData as any).num_tickets || names.length);
+      for (const name of names) {
+        const { data: passenger } = await supabase
+          .from("passengers")
+          .select("id, trips, total_spent")
+          .eq("name", name.trim())
+          .maybeSingle();
+        if (passenger) {
+          await supabase.from("passengers").update({
+            trips: Math.max(0, (passenger.trips || 0) - 1),
+            total_spent: Math.max(0, Number(passenger.total_spent || 0) - perTicketAmount),
+          } as any).eq("id", passenger.id);
+        }
+      }
+    }
+
     toast({ title: "Reservation Cancelled", description: `${bookingId} has been cancelled.` });
     fetchReservations();
   };
 
+  // Bug #13 — Fix passenger stats before deleting cancelled reservation
   const handleDelete = async (id: string, bookingId: string) => {
     const { error } = await supabase.from("reservations").delete().eq("id", id);
     if (error) {
@@ -107,7 +138,6 @@ const MyReservations = () => {
     setSelectedRes(res);
     setNewSeats([...res.seat_numbers]);
 
-    // Fetch route info
     const { data: route } = await supabase
       .from("train_routes")
       .select("id, total_seats")
@@ -115,7 +145,6 @@ const MyReservations = () => {
       .single();
     if (route) setRouteInfo(route as unknown as TrainRoute);
 
-    // Fetch all booked seats for that route/date excluding current reservation
     const { data } = await supabase
       .from("reservations")
       .select("id, seat_numbers")

@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -51,6 +52,7 @@ const validatePhone = (phone: string) => {
 const NewReservation = () => {
   const navigate = useNavigate();
   const ticketRef = useRef<HTMLDivElement>(null);
+  const { employee } = useAuth();
 
   const [routes, setRoutes] = useState<TrainRoute[]>([]);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
@@ -165,6 +167,17 @@ const NewReservation = () => {
     return null;
   };
 
+  // Bug #17 — Validate seat availability before moving to seat selection
+  const handleContinueToSeats = () => {
+    if (!selectedRoute || !travelDate) return;
+    const avail = availableSeatsCount[selectedRoute.id] ?? selectedRoute.total_seats;
+    if (numTickets > avail) {
+      toast({ title: "Not Enough Seats", description: `Not enough seats available. Only ${avail} seats left.`, variant: "destructive" });
+      return;
+    }
+    setStep("seats");
+  };
+
   const handleConfirm = async () => {
     if (!selectedRoute || !travelDate) return;
     const validationError = validateAllPassengers();
@@ -173,12 +186,36 @@ const NewReservation = () => {
       return;
     }
     setIsSubmitting(true);
-    const newBookingId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Bug #9 — Re-check seats for race condition
+    const { data: currentBookings } = await supabase
+      .from("reservations")
+      .select("seat_numbers")
+      .eq("route_id", selectedRoute.id)
+      .eq("travel_date", format(travelDate, "yyyy-MM-dd"))
+      .eq("status", "Confirmed");
+
+    if (currentBookings) {
+      const allBooked = (currentBookings as unknown as { seat_numbers: string[] }[]).flatMap((r) => r.seat_numbers);
+      const conflicts = selectedSeats.filter((s) => allBooked.includes(s));
+      if (conflicts.length > 0) {
+        setIsSubmitting(false);
+        setBookedSeats(allBooked);
+        setSelectedSeats([]);
+        toast({ title: "Seat Conflict", description: "Some selected seats were just booked by another user. Please reselect.", variant: "destructive" });
+        setStep("seats");
+        return;
+      }
+    }
+
+    // Bug #2 — UUID-based booking ID
+    const newBookingId = `BK-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 
     const { error } = await supabase.from("reservations").insert({
       booking_id: newBookingId,
       passenger_name: passengers.map((p) => p.name.trim()).join(", "),
-      passenger_email: passengers[0].email.trim() || null,
+      // Bug #11 — Save all passenger emails
+      passenger_email: passengers.map((p) => p.email.trim()).join(", "),
       passenger_phone: contactPhone ? `${contactCountryCode}${contactPhone}` : null,
       route_id: selectedRoute.id,
       travel_date: format(travelDate, "yyyy-MM-dd"),
@@ -186,6 +223,8 @@ const NewReservation = () => {
       num_tickets: numTickets,
       total_amount: numTickets * selectedRoute.price_per_ticket,
       status: "Confirmed",
+      // Bug #4 — Store booked_by employee id
+      booked_by: employee?.id || null,
     } as any);
 
     if (error) {
@@ -194,6 +233,7 @@ const NewReservation = () => {
       return;
     }
 
+    // Bug #10 — Match passengers by name AND email
     for (let pi = 0; pi < passengers.length; pi++) {
       const p = passengers[pi];
       const tripAmount = selectedRoute.price_per_ticket;
@@ -203,6 +243,7 @@ const NewReservation = () => {
         .from("passengers")
         .select("id, trips, total_spent")
         .eq("name", p.name.trim())
+        .eq("email", p.email.trim())
         .maybeSingle();
 
       if (existing) {
@@ -477,7 +518,7 @@ const NewReservation = () => {
             <div className="flex justify-end">
               <Button
                 disabled={!selectedRoute || !travelDate}
-                onClick={() => setStep("seats")}
+                onClick={handleContinueToSeats}
               >
                 Continue to Seat Selection
               </Button>

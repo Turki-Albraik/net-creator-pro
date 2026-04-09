@@ -68,6 +68,26 @@ const Schedules = () => {
       toast({ title: "Error", description: "All fields are required", variant: "destructive" });
       return;
     }
+
+    // Bug #14 — Validate arrival > departure
+    if (form.arrival_time <= form.departure_time) {
+      toast({ title: "Error", description: "Arrival time must be after departure time", variant: "destructive" });
+      return;
+    }
+
+    // Bug #15 — Check duplicate train ID on insert
+    if (!editId) {
+      const { data: existing } = await supabase
+        .from("train_routes")
+        .select("id")
+        .eq("train_id", form.train_id)
+        .maybeSingle();
+      if (existing) {
+        toast({ title: "Error", description: "A route with this Train ID already exists", variant: "destructive" });
+        return;
+      }
+    }
+
     const payload = {
       train_id: form.train_id,
       source: form.source,
@@ -95,7 +115,20 @@ const Schedules = () => {
     fetchSchedules();
   };
 
+  // Bug #5 — Check active bookings before deleting
   const handleDelete = async (id: string, name: string) => {
+    const { data: activeRes } = await supabase
+      .from("reservations")
+      .select("id")
+      .eq("route_id", id)
+      .eq("status", "Confirmed")
+      .limit(1);
+
+    if (activeRes && activeRes.length > 0) {
+      toast({ title: "Error", description: "Cannot delete: this route has active reservations", variant: "destructive" });
+      return;
+    }
+
     const { error } = await supabase.from("train_routes").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Train Deleted", description: `${name} has been removed` });
