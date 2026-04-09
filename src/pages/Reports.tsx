@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { subDays, subWeeks, subMonths, isAfter, format } from "date-fns";
+import { subDays, subWeeks, subMonths, isAfter, format, parse, getDay } from "date-fns";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(210, 60%, 50%)", "hsl(30, 80%, 55%)", "hsl(150, 50%, 45%)"];
 
 type Period = "daily" | "weekly" | "monthly" | "all";
+
+// Bug #16 — Day index for sorting weekly data
+const dayOrder: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
 const Reports = () => {
   const [period, setPeriod] = useState<Period>("all");
@@ -25,7 +28,7 @@ const Reports = () => {
     const fetchData = async () => {
       const { data: reservations } = await supabase
         .from("reservations")
-        .select("total_amount, created_at, route_id, seat_numbers, status")
+        .select("total_amount, created_at, route_id, seat_numbers, status, travel_date")
         .eq("status", "Confirmed");
 
       if (!reservations) return;
@@ -40,6 +43,7 @@ const Reports = () => {
         ? (reservations as any[]).filter((r) => isAfter(new Date(r.created_at), cutoff!))
         : (reservations as any[]);
 
+      // Build revenue data
       const monthMap: Record<string, number> = {};
       filtered.forEach((r) => {
         const label = period === "daily"
@@ -49,7 +53,21 @@ const Reports = () => {
           : format(new Date(r.created_at), "MMM yy");
         monthMap[label] = (monthMap[label] || 0) + Number(r.total_amount);
       });
-      setRevenueData(Object.entries(monthMap).map(([month, revenue]) => ({ month, revenue })));
+
+      // Bug #16 — Sort revenue data chronologically
+      let sortedRevenue = Object.entries(monthMap).map(([month, revenue]) => ({ month, revenue }));
+      if (period === "daily") {
+        sortedRevenue.sort((a, b) => a.month.localeCompare(b.month));
+      } else if (period === "weekly") {
+        sortedRevenue.sort((a, b) => (dayOrder[a.month] ?? 0) - (dayOrder[b.month] ?? 0));
+      } else {
+        sortedRevenue.sort((a, b) => {
+          const da = new Date(`01 ${a.month}`);
+          const db = new Date(`01 ${b.month}`);
+          return da.getTime() - db.getTime();
+        });
+      }
+      setRevenueData(sortedRevenue);
 
       const { data: routes } = await supabase.from("train_routes").select("id, source, destination, total_seats");
       const routeMap: Record<string, string> = {};
@@ -60,23 +78,31 @@ const Reports = () => {
       });
 
       const routeCount: Record<string, number> = {};
-      const routeSeatsBooked: Record<string, number> = {};
+      // Bug #6 — Track seats per route per date for proper occupancy
+      const routeDateSeats: Record<string, Record<string, number>> = {};
       filtered.forEach((r) => {
         const name = routeMap[r.route_id] || "Unknown";
         routeCount[name] = (routeCount[name] || 0) + 1;
-        routeSeatsBooked[r.route_id] = (routeSeatsBooked[r.route_id] || 0) + (r.seat_numbers?.length || 0);
+        const dateKey = r.travel_date || format(new Date(r.created_at), "yyyy-MM-dd");
+        if (!routeDateSeats[r.route_id]) routeDateSeats[r.route_id] = {};
+        routeDateSeats[r.route_id][dateKey] = (routeDateSeats[r.route_id][dateKey] || 0) + (r.seat_numbers?.length || 0);
       });
       setRouteData(Object.entries(routeCount).map(([route, bookings]) => ({ route, bookings })));
 
+      // Bug #6 — Calculate occupancy as average daily rate, capped at 100%
       const occData: { name: string; value: number }[] = [];
       if (routes) {
         (routes as any[]).forEach((r) => {
-          const booked = routeSeatsBooked[r.id] || 0;
-          const rate = r.total_seats > 0 ? Math.round((booked / r.total_seats) * 100) : 0;
-          occData.push({ name: `${r.source}→${r.destination}`, value: rate });
+          const dateMap = routeDateSeats[r.id];
+          if (!dateMap || Object.keys(dateMap).length === 0) return;
+          const dailyRates = Object.values(dateMap).map((booked) => 
+            Math.min(100, r.total_seats > 0 ? Math.round((booked / r.total_seats) * 100) : 0)
+          );
+          const avgRate = Math.round(dailyRates.reduce((a, b) => a + b, 0) / dailyRates.length);
+          occData.push({ name: `${r.source}→${r.destination}`, value: avgRate });
         });
       }
-      setOccupancyData(occData.filter((d) => d.value > 0));
+      setOccupancyData(occData);
     };
     fetchData();
   }, [period]);
