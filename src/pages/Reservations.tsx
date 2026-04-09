@@ -63,7 +63,15 @@ const Reservations = () => {
 
   useEffect(() => { fetchReservations(); }, []);
 
+  // Bug #12 — Update passenger stats on cancel
   const handleCancel = async (id: string, bookingId: string) => {
+    // Fetch reservation details before cancelling
+    const { data: resData } = await supabase
+      .from("reservations")
+      .select("total_amount, passenger_name, num_tickets")
+      .eq("id", id)
+      .single();
+
     const { error } = await supabase
       .from("reservations")
       .update({ status: "Cancelled" } as any)
@@ -72,6 +80,26 @@ const Reservations = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+
+    // Decrement passenger stats
+    if (resData) {
+      const names = (resData as any).passenger_name.split(", ");
+      const perTicketAmount = Number((resData as any).total_amount) / ((resData as any).num_tickets || names.length);
+      for (const name of names) {
+        const { data: passenger } = await supabase
+          .from("passengers")
+          .select("id, trips, total_spent")
+          .eq("name", name.trim())
+          .maybeSingle();
+        if (passenger) {
+          await supabase.from("passengers").update({
+            trips: Math.max(0, (passenger.trips || 0) - 1),
+            total_spent: Math.max(0, Number(passenger.total_spent || 0) - perTicketAmount),
+          } as any).eq("id", passenger.id);
+        }
+      }
+    }
+
     toast({ title: "Reservation Cancelled", description: `${bookingId} has been cancelled. Seats are now available.` });
     fetchReservations();
   };
