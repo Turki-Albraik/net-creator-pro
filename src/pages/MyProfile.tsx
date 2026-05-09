@@ -16,7 +16,7 @@ const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email
 const validatePhone = (phone: string) => phone.replace(/\D/g, "").length === 9;
 
 const MyProfile = () => {
-  const { employee, login } = useAuth();
+  const { employee } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,16 +25,20 @@ const MyProfile = () => {
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Determine which table this user lives in
+  const isPassenger = employee?.role === "Passenger";
+  const tableName = isPassenger ? "passengers" : "employees";
+
   useEffect(() => {
     if (!employee) return;
     const fetchProfile = async () => {
-      const { data } = await supabase.from("employees").select("*").eq("id", employee.id).single();
+      const { data } = await supabase.from(tableName as any).select("*").eq("id", employee.id).single();
       if (data) {
         setName((data as any).name);
         setEmail((data as any).email || "");
-        setPassword((data as any).password || "");
+        // Do NOT pre-fill password — keep blank
+        setPassword("");
         const fullPhone = (data as any).phone || "";
-        // Extract country code
         const matched = countryCodes.find((cc) => fullPhone.startsWith(cc.code));
         if (matched) {
           setCountryCode(matched.code);
@@ -45,7 +49,7 @@ const MyProfile = () => {
       }
     };
     fetchProfile();
-  }, [employee]);
+  }, [employee, tableName]);
 
   const handleSave = async () => {
     if (!employee) return;
@@ -67,13 +71,17 @@ const MyProfile = () => {
     const newName = name.trim();
     const fullPhone = phone ? `${countryCode}${phone}` : null;
 
-    const hashedPassword = await hashPassword(password);
-    const { error } = await supabase.from("employees").update({
+    const updatePayload: any = {
       name: newName,
       email: email.trim() || null,
       phone: fullPhone,
-      password: hashedPassword,
-    } as any).eq("id", employee.id);
+    };
+    // Only update password if user typed one
+    if (password.trim() !== "") {
+      updatePayload.password = await hashPassword(password);
+    }
+
+    const { error } = await supabase.from(tableName as any).update(updatePayload).eq("id", employee.id);
 
     if (error) {
       setSaving(false);
@@ -81,18 +89,21 @@ const MyProfile = () => {
       return;
     }
 
-    // Sync name to passengers table (exact match)
+    // Sync name across passengers & reservations records (only when name changed)
     if (oldName !== newName) {
-      const { data: passengers } = await supabase
-        .from("passengers")
-        .select("id, name")
-        .eq("name", oldName);
-      if (passengers) {
-        for (const p of passengers as any[]) {
-          await supabase.from("passengers").update({ name: newName } as any).eq("id", p.id);
+      // For admins: also update matching passengers row by exact name
+      if (!isPassenger) {
+        const { data: passengers } = await supabase
+          .from("passengers")
+          .select("id, name")
+          .eq("name", oldName);
+        if (passengers) {
+          for (const p of passengers as any[]) {
+            await supabase.from("passengers").update({ name: newName } as any).eq("id", p.id);
+          }
         }
       }
-      // Sync to reservations: split by ", " and exact-compare each part
+      // Reservations: split by ", " and exact-compare each part
       const { data: reservations } = await supabase
         .from("reservations")
         .select("id, passenger_name");
@@ -106,13 +117,12 @@ const MyProfile = () => {
       }
     }
 
-    // Update local storage
     const updatedEmployee = { ...employee, name: newName };
     localStorage.setItem("railsync_employee", JSON.stringify(updatedEmployee));
 
     setSaving(false);
+    setPassword("");
     toast({ title: "Profile Updated", description: "Your information has been saved" });
-    // Reload to refresh auth context
     window.location.reload();
   };
 
@@ -162,8 +172,8 @@ const MyProfile = () => {
                 {phone && !validatePhone(phone) && <p className="text-xs text-destructive">Phone must be exactly 9 digits</p>}
               </div>
               <div className="space-y-2">
-                <Label>Password</Label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Label>New Password (leave blank to keep current)</Label>
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
               </div>
               <Button onClick={handleSave} disabled={saving} className="w-full">
                 {saving ? "Saving..." : "Save Changes"}
