@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { hashPassword } from "@/contexts/AuthContext";
 
 import { countryCodes } from "@/lib/countryCodes";
 
@@ -66,11 +67,12 @@ const MyProfile = () => {
     const newName = name.trim();
     const fullPhone = phone ? `${countryCode}${phone}` : null;
 
+    const hashedPassword = await hashPassword(password);
     const { error } = await supabase.from("employees").update({
       name: newName,
       email: email.trim() || null,
       phone: fullPhone,
-      password: password,
+      password: hashedPassword,
     } as any).eq("id", employee.id);
 
     if (error) {
@@ -79,7 +81,7 @@ const MyProfile = () => {
       return;
     }
 
-    // Sync name to passengers table
+    // Sync name to passengers table (exact match)
     if (oldName !== newName) {
       const { data: passengers } = await supabase
         .from("passengers")
@@ -90,14 +92,15 @@ const MyProfile = () => {
           await supabase.from("passengers").update({ name: newName } as any).eq("id", p.id);
         }
       }
-      // Sync to reservations
+      // Sync to reservations: split by ", " and exact-compare each part
       const { data: reservations } = await supabase
         .from("reservations")
-        .select("id, passenger_name")
-        .ilike("passenger_name", `%${oldName}%`);
+        .select("id, passenger_name");
       if (reservations) {
         for (const r of reservations as any[]) {
-          const updated = r.passenger_name.replace(oldName, newName);
+          const parts = (r.passenger_name as string).split(", ");
+          if (!parts.some((p) => p === oldName)) continue;
+          const updated = parts.map((p) => (p === oldName ? newName : p)).join(", ");
           await supabase.from("reservations").update({ passenger_name: updated } as any).eq("id", r.id);
         }
       }
