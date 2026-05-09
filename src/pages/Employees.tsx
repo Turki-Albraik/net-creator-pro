@@ -125,50 +125,6 @@ const Employees = () => {
         <DashboardHeader title="Employees" subtitle="Manage your team members" />
 
         <div className="flex gap-3 mt-6">
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditId(null); }}>
-            <DialogTrigger asChild>
-              <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editId ? "Edit Employee" : "Add New Employee"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Employee ID *</Label>
-                  <Input value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} placeholder="e.g. 2" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Email (auto-generated)</Label>
-                  <Input value={form.employee_id ? `${form.employee_id}@sikkah.com` : ""} disabled className="bg-muted" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Full Name *</Label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Password *</Label>
-                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Set a password" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone (9 digits) *</Label>
-                  <div className="flex gap-2">
-                    <Select value={form.countryCode} onValueChange={(v) => setForm({ ...form, countryCode: v })}>
-                      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {countryCodes.map((cc) => (
-                          <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })} placeholder="5XXXXXXXX" maxLength={9} className="flex-1" />
-                  </div>
-                </div>
-                <Button onClick={handleSave} className="w-full">{editId ? "Update Employee" : "Add Employee"}</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
           <Button variant="outline" onClick={() => setShowList(!showList)}>
             {showList ? <><EyeOff className="h-4 w-4 mr-2" /> Hide List</> : <><Eye className="h-4 w-4 mr-2" /> Show List</>}
           </Button>
@@ -188,7 +144,6 @@ const Employees = () => {
                     <TableHead>Role</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,21 +156,11 @@ const Employees = () => {
                       </TableCell>
                       <TableCell>{emp.email || "—"}</TableCell>
                       <TableCell>{emp.phone || "—"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(emp)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(emp.id, emp.name)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
                     </TableRow>
                   ))}
                   {employees.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                         No employees found
                       </TableCell>
                     </TableRow>
