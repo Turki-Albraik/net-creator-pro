@@ -84,11 +84,11 @@ const MyReservations = () => {
 
   useEffect(() => { fetchReservations(); }, [employee]);
 
-  // Bug #3 — Update passenger stats on cancel
+  // Update passenger stats on cancel — match by name AND email
   const handleCancel = async (id: string, bookingId: string) => {
     const { data: resData } = await supabase
       .from("reservations")
-      .select("total_amount, passenger_name, num_tickets")
+      .select("total_amount, passenger_name, passenger_email, num_tickets")
       .eq("id", id)
       .single();
 
@@ -102,14 +102,16 @@ const MyReservations = () => {
     }
 
     if (resData) {
-      const names = (resData as any).passenger_name.split(", ");
+      const names = ((resData as any).passenger_name || "").split(", ");
+      const emails = ((resData as any).passenger_email || "").split(", ");
       const perTicketAmount = Number((resData as any).total_amount) / ((resData as any).num_tickets || names.length);
-      for (const name of names) {
-        const { data: passenger } = await supabase
-          .from("passengers")
-          .select("id, trips, total_spent")
-          .eq("name", name.trim())
-          .maybeSingle();
+      for (let i = 0; i < names.length; i++) {
+        const name = (names[i] || "").trim();
+        const email = (emails[i] || "").trim();
+        if (!name) continue;
+        let q = supabase.from("passengers").select("id, trips, total_spent").eq("name", name);
+        if (email) q = q.eq("email", email);
+        const { data: passenger } = await q.maybeSingle();
         if (passenger) {
           await supabase.from("passengers").update({
             trips: Math.max(0, (passenger.trips || 0) - 1),
