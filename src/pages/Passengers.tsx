@@ -80,15 +80,16 @@ const Passengers = () => {
     } as any).eq("id", editPassenger.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
 
-    // Bug #7 — Use replaceAll instead of replace
+    // Safe split-and-compare to avoid substring corruption
     if (oldName !== newName) {
       const { data: reservations } = await supabase
         .from("reservations")
-        .select("id, passenger_name")
-        .like("passenger_name", `%${oldName}%`);
+        .select("id, passenger_name");
       if (reservations) {
         for (const r of reservations as any[]) {
-          const updatedName = r.passenger_name.replaceAll(oldName, newName);
+          const parts = (r.passenger_name as string).split(", ");
+          if (!parts.some((p) => p === oldName)) continue;
+          const updatedName = parts.map((p) => (p === oldName ? newName : p)).join(", ");
           await supabase.from("reservations").update({ passenger_name: updatedName } as any).eq("id", r.id);
         }
       }

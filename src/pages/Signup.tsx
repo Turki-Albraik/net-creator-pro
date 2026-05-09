@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { hashPassword } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo.png";
 
 import { countryCodes } from "@/lib/countryCodes";
@@ -44,10 +45,11 @@ const Signup = () => {
     // Generate a unique employee_id for passenger
     const employeeId = `P-${Date.now().toString().slice(-6)}`;
 
+    const hashed = await hashPassword(password);
     const { error } = await supabase.from("employees").insert({
       employee_id: employeeId,
       name: name.trim(),
-      password: password,
+      password: hashed,
       role: "Passenger",
       email: email.trim(),
       phone: `${countryCode}${phone}`,

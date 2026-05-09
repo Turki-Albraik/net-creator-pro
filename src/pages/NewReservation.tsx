@@ -237,7 +237,7 @@ const NewReservation = () => {
     for (let pi = 0; pi < passengers.length; pi++) {
       const p = passengers[pi];
       const tripAmount = selectedRoute.price_per_ticket;
-      const fullPhone = pi === 0 && contactPhone ? `${contactCountryCode}${contactPhone}` : null;
+      const fullPhone = pi === 0 && contactPhone ? `${contactCountryCode}${contactPhone}` : undefined;
 
       const { data: existing } = await supabase
         .from("passengers")
@@ -247,17 +247,19 @@ const NewReservation = () => {
         .maybeSingle();
 
       if (existing) {
-        await supabase.from("passengers").update({
+        const updatePayload: any = {
           trips: (existing.trips || 0) + 1,
           total_spent: Number(existing.total_spent || 0) + tripAmount,
-          phone: fullPhone,
           email: p.email.trim() || null,
-        } as any).eq("id", existing.id);
+        };
+        // Only set phone when we actually have one — don't overwrite existing
+        if (fullPhone !== undefined) updatePayload.phone = fullPhone;
+        await supabase.from("passengers").update(updatePayload).eq("id", existing.id);
       } else {
         await supabase.from("passengers").insert({
           name: p.name.trim(),
           email: p.email.trim() || null,
-          phone: fullPhone,
+          phone: fullPhone ?? null,
           trips: 1,
           total_spent: tripAmount,
         } as any);

@@ -21,7 +21,7 @@ interface Schedule {
 const statusVariant = (status: string) => {
   switch (status) {
     case "Active": return "default" as const;
-    case "on Maintenance": return "secondary" as const;
+    case "Maintenance": return "secondary" as const;
     case "Inactive": return "destructive" as const;
     case "Full": return "secondary" as const;
     default: return "outline" as const;

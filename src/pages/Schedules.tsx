@@ -69,13 +69,35 @@ const Schedules = () => {
       return;
     }
 
-    // Bug #14 — Validate arrival > departure
-    if (form.arrival_time <= form.departure_time) {
-      toast({ title: "Error", description: "Arrival time must be after departure time", variant: "destructive" });
+    // Source must differ from destination
+    if (form.source.trim().toLowerCase() === form.destination.trim().toLowerCase()) {
+      toast({ title: "Error", description: "Source and destination cannot be the same", variant: "destructive" });
       return;
     }
 
-    // Bug #15 — Check duplicate train ID on insert
+    const seats = parseInt(form.total_seats);
+    const price = parseFloat(form.price_per_ticket);
+    const distance = parseInt(form.distance_km);
+
+    if (!Number.isInteger(seats) || seats < 1 || seats > 500) {
+      toast({ title: "Error", description: "Seats must be an integer between 1 and 500", variant: "destructive" });
+      return;
+    }
+    if (!(price > 0)) {
+      toast({ title: "Error", description: "Price must be a positive number greater than 0", variant: "destructive" });
+      return;
+    }
+    if (!Number.isInteger(distance) || distance <= 0) {
+      toast({ title: "Error", description: "Distance must be a positive integer greater than 0", variant: "destructive" });
+      return;
+    }
+
+    // Overnight routes are valid — warn only
+    if (form.arrival_time <= form.departure_time) {
+      toast({ title: "Heads up", description: "Arrival is on or before departure — treating as an overnight route." });
+    }
+
+    // Check duplicate train ID on insert
     if (!editId) {
       const { data: existing } = await supabase
         .from("train_routes")
@@ -94,9 +116,9 @@ const Schedules = () => {
       destination: form.destination,
       departure_time: form.departure_time,
       arrival_time: form.arrival_time,
-      total_seats: parseInt(form.total_seats) || 40,
-      price_per_ticket: parseFloat(form.price_per_ticket),
-      distance_km: parseInt(form.distance_km),
+      total_seats: seats,
+      price_per_ticket: price,
+      distance_km: distance,
       status: form.status,
     };
 

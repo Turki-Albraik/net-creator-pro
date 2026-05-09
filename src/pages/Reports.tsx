@@ -26,22 +26,22 @@ const Reports = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: reservations } = await supabase
-        .from("reservations")
-        .select("total_amount, created_at, route_id, seat_numbers, status, travel_date")
-        .eq("status", "Confirmed");
-
-      if (!reservations) return;
-
       const now = new Date();
       let cutoff: Date | null = null;
       if (period === "daily") cutoff = subDays(now, 1);
       else if (period === "weekly") cutoff = subWeeks(now, 1);
       else if (period === "monthly") cutoff = subMonths(now, 1);
 
-      const filtered = cutoff
-        ? (reservations as any[]).filter((r) => isAfter(new Date(r.created_at), cutoff!))
-        : (reservations as any[]);
+      let query = supabase
+        .from("reservations")
+        .select("total_amount, created_at, route_id, seat_numbers, status, travel_date")
+        .eq("status", "Confirmed");
+      if (cutoff) query = query.gte("created_at", cutoff.toISOString());
+
+      const { data: reservations } = await query;
+      if (!reservations) return;
+
+      const filtered = reservations as any[];
 
       // Build revenue data
       const monthMap: Record<string, number> = {};
