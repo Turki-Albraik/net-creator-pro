@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Pencil, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { countryCodes } from "@/lib/countryCodes";
+import { hashPassword } from "@/contexts/AuthContext";
 
 interface Employee {
   id: string;
@@ -31,7 +32,7 @@ const Employees = () => {
   const [showList, setShowList] = useState(true);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
+  const [form, setForm] = useState({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966", role: "Railway Administrator" });
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -43,7 +44,7 @@ const Employees = () => {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
+    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966", role: "Railway Administrator" });
     setOpen(true);
   };
 
@@ -57,6 +58,7 @@ const Employees = () => {
       password: emp.password,
       phone: matched ? fullPhone.slice(matched.code.length) : fullPhone,
       countryCode: matched?.code || "+966",
+      role: emp.role || "Railway Administrator",
     });
     setOpen(true);
   };
@@ -72,12 +74,13 @@ const Employees = () => {
     }
 
     const autoEmail = `${form.employee_id}@sikkah.com`;
+    const hashedPassword = await hashPassword(form.password);
 
     const payload = {
       employee_id: form.employee_id,
       name: form.name,
-      password: form.password,
-      role: "Railway Administrator",
+      password: hashedPassword,
+      role: form.role,
       email: autoEmail,
       phone: `${form.countryCode}${form.phone}`,
     };
@@ -91,7 +94,7 @@ const Employees = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Employee Added", description: `${form.name} has been added successfully` });
     }
-    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966" });
+    setForm({ employee_id: "", name: "", password: "", phone: "", countryCode: "+966", role: "Railway Administrator" });
     setOpen(false);
     setEditId(null);
     fetchEmployees();
