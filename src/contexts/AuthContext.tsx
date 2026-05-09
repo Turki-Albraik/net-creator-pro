@@ -44,37 +44,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (identifier: string, password: string): Promise<boolean> => {
     const { supabase } = await import("@/integrations/supabase/client");
-    
-    // Try by employee_id first (for admins), then by email (for passengers)
+
+    // 1. Try admin (employees table) by employee_id, then by email
     let { data, error } = await supabase
       .from("employees")
       .select("id, employee_id, name, role, password")
       .eq("employee_id", identifier)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
+    if (!data) {
       const result = await supabase
         .from("employees")
         .select("id, employee_id, name, role, password")
         .eq("email", identifier)
-        .single();
+        .maybeSingle();
       data = result.data;
       error = result.error;
     }
 
-    if (error || !data) return false;
-
     const hashedInput = await hashPassword(password);
-    // Support both hashed and legacy plaintext passwords
-    if (data.password !== hashedInput && data.password !== password) {
+
+    if (data) {
+      if ((data as any).password !== hashedInput && (data as any).password !== password) {
+        return false;
+      }
+      const emp: Employee = {
+        id: data.id,
+        employee_id: data.employee_id,
+        name: data.name,
+        role: data.role,
+      };
+      setEmployee(emp);
+      localStorage.setItem("railsync_employee", JSON.stringify(emp));
+      return true;
+    }
+
+    // 2. Try passenger (passengers table) by email
+    const { data: pData } = await supabase
+      .from("passengers")
+      .select("id, name, email, password")
+      .eq("email", identifier)
+      .maybeSingle();
+
+    if (!pData) return false;
+    if ((pData as any).password !== hashedInput && (pData as any).password !== password) {
       return false;
     }
 
     const emp: Employee = {
-      id: data.id,
-      employee_id: data.employee_id,
-      name: data.name,
-      role: data.role,
+      id: (pData as any).id,
+      employee_id: `P-${(pData as any).id.slice(0, 8).toUpperCase()}`,
+      name: (pData as any).name,
+      role: "Passenger",
     };
     setEmployee(emp);
     localStorage.setItem("railsync_employee", JSON.stringify(emp));

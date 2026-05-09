@@ -55,7 +55,7 @@ const Employees = () => {
     setForm({
       employee_id: emp.employee_id,
       name: emp.name,
-      password: emp.password,
+      password: "",
       phone: matched ? fullPhone.slice(matched.code.length) : fullPhone,
       countryCode: matched?.code || "+966",
       role: emp.role || "Railway Administrator",
@@ -64,7 +64,8 @@ const Employees = () => {
   };
 
   const handleSave = async () => {
-    if (!form.employee_id || !form.name || !form.password || !form.phone) {
+    // For new employees, password is required. For edits, it's optional.
+    if (!form.employee_id || !form.name || !form.phone || (!editId && !form.password)) {
       toast({ title: "Error", description: "ID, Name, Password and Phone are required", variant: "destructive" });
       return;
     }
@@ -74,19 +75,20 @@ const Employees = () => {
     }
 
     const autoEmail = `${form.employee_id}@sikkah.com`;
-    const hashedPassword = await hashPassword(form.password);
 
-    const payload = {
+    const payload: any = {
       employee_id: form.employee_id,
       name: form.name,
-      password: hashedPassword,
       role: form.role,
       email: autoEmail,
       phone: `${form.countryCode}${form.phone}`,
     };
+    if (form.password.trim() !== "") {
+      payload.password = await hashPassword(form.password);
+    }
 
     if (editId) {
-      const { error } = await supabase.from("employees").update(payload as any).eq("id", editId);
+      const { error } = await supabase.from("employees").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Employee Updated", description: `${form.name} has been updated` });
     } else {
@@ -101,6 +103,7 @@ const Employees = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Remove employee ${name}?`)) return;
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

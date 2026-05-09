@@ -139,6 +139,7 @@ const Schedules = () => {
 
   // Bug #5 — Check active bookings before deleting
   const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete route ${name}? This cannot be undone.`)) return;
     const { data: activeRes } = await supabase
       .from("reservations")
       .select("id")

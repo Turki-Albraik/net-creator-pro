@@ -101,6 +101,7 @@ const Passengers = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete passenger ${name}?`)) return;
     const { error } = await supabase.from("passengers").delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Passenger Deleted", description: `${name} has been removed` });

@@ -86,6 +86,7 @@ const MyReservations = () => {
 
   // Update passenger stats on cancel — match by name AND email
   const handleCancel = async (id: string, bookingId: string) => {
+    if (!window.confirm(`Cancel booking ${bookingId}? Seats will be released.`)) return;
     const { data: resData } = await supabase
       .from("reservations")
       .select("total_amount, passenger_name, passenger_email, num_tickets")

@@ -42,27 +42,27 @@ const Signup = () => {
 
     setLoading(true);
 
-    // Generate a unique employee_id for passenger
-    const employeeId = `P-${Date.now().toString().slice(-6)}`;
-
     const hashed = await hashPassword(password);
-    const { error } = await supabase.from("employees").insert({
-      employee_id: employeeId,
+    const { error } = await supabase.from("passengers").insert({
       name: name.trim(),
-      password: hashed,
-      role: "Passenger",
       email: email.trim(),
       phone: `${countryCode}${phone}`,
+      password: hashed,
+      trips: 0,
+      total_spent: 0,
     } as any);
 
     setLoading(false);
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      const msg = error.message.includes("duplicate") || error.message.includes("unique")
+        ? "An account with this email already exists"
+        : error.message;
+      toast({ title: "Error", description: msg, variant: "destructive" });
       return;
     }
 
-    toast({ title: "Account Created!", description: `Your ID is ${employeeId}. Use it to sign in.` });
+    toast({ title: "Account Created!", description: `Sign in with your email.` });
     navigate("/login");
   };
 
