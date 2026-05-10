@@ -15,6 +15,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { countryCodes } from "@/lib/countryCodes";
 import { hashPassword } from "@/contexts/AuthContext";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 interface Employee {
   id: string;
