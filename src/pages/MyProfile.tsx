@@ -59,13 +59,17 @@ const MyProfile = () => {
       toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-    if (email && !validateEmail(email)) {
-      toast({ title: "Error", description: "Please enter a valid email", variant: "destructive" });
-      return;
+    if (email) {
+      const emailErr = getEmailError(email.trim());
+      if (emailErr) { toast({ title: "Error", description: emailErr, variant: "destructive" }); return; }
     }
-    if (phone && !validatePhone(phone)) {
-      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
-      return;
+    if (phone) {
+      const phoneErr = getPhoneError(`${countryCode}${phone}`);
+      if (phoneErr) { toast({ title: "Error", description: phoneErr, variant: "destructive" }); return; }
+    }
+    if (password.trim() !== "") {
+      const pwErr = getPasswordError(password);
+      if (pwErr) { toast({ title: "Error", description: pwErr, variant: "destructive" }); return; }
     }
 
     setSaving(true);
