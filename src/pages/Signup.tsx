@@ -119,13 +119,16 @@ const Signup = () => {
                   className="flex-1"
                 />
               </div>
-              {phone && !validatePhone(phone) && <p className="text-xs text-destructive">Phone must be exactly 9 digits</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password" />
+              {password && getPasswordError(password) && (
+                <p className="text-xs text-destructive">{getPasswordError(password)}</p>
+              )}
+              <PasswordChecklist password={password} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !isPasswordValid(password)}>
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
