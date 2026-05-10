@@ -70,7 +70,6 @@ const Sidebar = () => {
             <Menu className="h-4 w-4" />
           </Button>
         </div>
-        <div className="rail-strip opacity-50" />
 
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => (
