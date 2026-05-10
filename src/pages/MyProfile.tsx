@@ -180,8 +180,12 @@ const MyProfile = () => {
               <div className="space-y-2">
                 <Label>New Password (leave blank to keep current)</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                {password && getPasswordError(password) && (
+                  <p className="text-xs text-destructive">{getPasswordError(password)}</p>
+                )}
+                {password && <PasswordChecklist password={password} />}
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
+              <Button onClick={handleSave} disabled={saving || (password.trim() !== "" && !isPasswordValid(password))} className="w-full">
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
             </CardContent>
