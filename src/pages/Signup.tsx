@@ -28,16 +28,26 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
-      toast({ title: "Error", description: "All fields are required", variant: "destructive" });
+    if (!name.trim()) {
+      toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-    if (!validateEmail(email)) {
-      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" });
+
+    // Backend validation rules
+    const fullPhone = `${countryCode}${phone}`;
+    const emailErr = getEmailError(email.trim());
+    if (emailErr) {
+      toast({ title: "Error", description: emailErr, variant: "destructive" });
       return;
     }
-    if (!validatePhone(phone)) {
-      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
+    const phoneErr = getPhoneError(fullPhone);
+    if (phoneErr) {
+      toast({ title: "Error", description: phoneErr, variant: "destructive" });
+      return;
+    }
+    const pwErr = getPasswordError(password);
+    if (pwErr) {
+      toast({ title: "Error", description: pwErr, variant: "destructive" });
       return;
     }
 
@@ -47,7 +57,7 @@ const Signup = () => {
     const { error } = await supabase.from("passengers").insert({
       name: name.trim(),
       email: email.trim(),
-      phone: `${countryCode}${phone}`,
+      phone: fullPhone,
       password: hashed,
       trips: 0,
       total_spent: 0,
