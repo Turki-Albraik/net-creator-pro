@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
@@ -57,13 +59,17 @@ const MyProfile = () => {
       toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-    if (email && !validateEmail(email)) {
-      toast({ title: "Error", description: "Please enter a valid email", variant: "destructive" });
-      return;
+    if (email) {
+      const emailErr = getEmailError(email.trim());
+      if (emailErr) { toast({ title: "Error", description: emailErr, variant: "destructive" }); return; }
     }
-    if (phone && !validatePhone(phone)) {
-      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
-      return;
+    if (phone) {
+      const phoneErr = getPhoneError(`${countryCode}${phone}`);
+      if (phoneErr) { toast({ title: "Error", description: phoneErr, variant: "destructive" }); return; }
+    }
+    if (password.trim() !== "") {
+      const pwErr = getPasswordError(password);
+      if (pwErr) { toast({ title: "Error", description: pwErr, variant: "destructive" }); return; }
     }
 
     setSaving(true);
@@ -174,8 +180,12 @@ const MyProfile = () => {
               <div className="space-y-2">
                 <Label>New Password (leave blank to keep current)</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                {password && getPasswordError(password) && (
+                  <p className="text-xs text-destructive">{getPasswordError(password)}</p>
+                )}
+                {password && <PasswordChecklist password={password} />}
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
+              <Button onClick={handleSave} disabled={saving || (password.trim() !== "" && !isPasswordValid(password))} className="w-full">
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
             </CardContent>

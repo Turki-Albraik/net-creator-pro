@@ -15,6 +15,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { countryCodes } from "@/lib/countryCodes";
 import { hashPassword } from "@/contexts/AuthContext";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 interface Employee {
   id: string;
@@ -75,6 +77,16 @@ const Employees = () => {
     }
 
     const autoEmail = `${form.employee_id}@sikkah.com`;
+
+    // Backend validation
+    const emailErr = getEmailError(autoEmail);
+    if (emailErr) { toast({ title: "Error", description: emailErr, variant: "destructive" }); return; }
+    const phoneErr = getPhoneError(`${form.countryCode}${form.phone}`);
+    if (phoneErr) { toast({ title: "Error", description: phoneErr, variant: "destructive" }); return; }
+    if (form.password.trim() !== "") {
+      const pwErr = getPasswordError(form.password);
+      if (pwErr) { toast({ title: "Error", description: pwErr, variant: "destructive" }); return; }
+    }
 
     const payload: any = {
       employee_id: form.employee_id,

@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo.png";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const validatePhone = (phone: string) => phone.replace(/\D/g, "").length === 9;
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -27,16 +28,26 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
-      toast({ title: "Error", description: "All fields are required", variant: "destructive" });
+    if (!name.trim()) {
+      toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-    if (!validateEmail(email)) {
-      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" });
+
+    // Backend validation rules
+    const fullPhone = `${countryCode}${phone}`;
+    const emailErr = getEmailError(email.trim());
+    if (emailErr) {
+      toast({ title: "Error", description: emailErr, variant: "destructive" });
       return;
     }
-    if (!validatePhone(phone)) {
-      toast({ title: "Error", description: "Phone must be exactly 9 digits", variant: "destructive" });
+    const phoneErr = getPhoneError(fullPhone);
+    if (phoneErr) {
+      toast({ title: "Error", description: phoneErr, variant: "destructive" });
+      return;
+    }
+    const pwErr = getPasswordError(password);
+    if (pwErr) {
+      toast({ title: "Error", description: pwErr, variant: "destructive" });
       return;
     }
 
@@ -46,7 +57,7 @@ const Signup = () => {
     const { error } = await supabase.from("passengers").insert({
       name: name.trim(),
       email: email.trim(),
-      phone: `${countryCode}${phone}`,
+      phone: fullPhone,
       password: hashed,
       trips: 0,
       total_spent: 0,
@@ -108,13 +119,16 @@ const Signup = () => {
                   className="flex-1"
                 />
               </div>
-              {phone && !validatePhone(phone) && <p className="text-xs text-destructive">Phone must be exactly 9 digits</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password" />
+              {password && getPasswordError(password) && (
+                <p className="text-xs text-destructive">{getPasswordError(password)}</p>
+              )}
+              <PasswordChecklist password={password} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !isPasswordValid(password)}>
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
