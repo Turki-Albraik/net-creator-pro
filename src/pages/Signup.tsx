@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo.png";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const validatePhone = (phone: string) => phone.replace(/\D/g, "").length === 9;
 
 const Signup = () => {
   const [name, setName] = useState("");
