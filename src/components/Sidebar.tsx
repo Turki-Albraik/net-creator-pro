@@ -103,37 +103,27 @@ const Sidebar = () => {
   );
 
   const UserCard = ({ expanded }: { expanded: boolean }) => (
-    <div className="px-3 pb-4 space-y-2">
+    <div className="px-3 pb-4">
       {employee && (
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-forest-900 border border-forest-800">
+        <button
+          onClick={handleLogout}
+          title="Sign Out"
+          className="w-full flex items-center gap-3 p-2 rounded-xl bg-forest-900 border border-forest-800 hover:border-amber-brand/60 transition-colors group"
+        >
           <div className="h-9 w-9 rounded-full bg-amber-brand text-forest-950 flex items-center justify-center font-bold text-sm shrink-0">
             {userInitials}
           </div>
           <div
             className={cn(
-              "flex-1 min-w-0 transition-all duration-200 overflow-hidden",
+              "flex-1 min-w-0 text-left transition-all duration-200 overflow-hidden",
               expanded ? "opacity-100" : "opacity-0 w-0"
             )}
           >
             <p className="text-xs font-semibold text-white truncate">{employee.name}</p>
-            <p className="text-[10px] text-[#8FA99A] uppercase tracking-wider truncate">{employee.role}</p>
+            <p className="text-[10px] text-[#8FA99A] uppercase tracking-wider truncate group-hover:text-amber-brand">Sign out</p>
           </div>
-        </div>
+        </button>
       )}
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl text-[#8FA99A] hover:bg-forest-900 hover:text-white transition-colors"
-      >
-        <LogOut className="h-4 w-4 shrink-0" />
-        <span
-          className={cn(
-            "text-sm font-medium whitespace-nowrap transition-all",
-            expanded ? "opacity-100" : "opacity-0 w-0"
-          )}
-        >
-          Sign Out
-        </span>
-      </button>
     </div>
   );
 

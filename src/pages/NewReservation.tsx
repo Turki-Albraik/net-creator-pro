@@ -341,53 +341,57 @@ const NewReservation = () => {
           {/* Carriage front (driver cabin) */}
           <div className="flex items-center justify-between mb-5 px-2">
             <span className="label-caps text-foreground/70">Carriage A · Forward</span>
-            <span className="label-caps text-foreground/70">→ Direction of Travel</span>
+            <span className="label-caps text-foreground/70">Window Seats</span>
           </div>
 
-          {/* Windows row backdrop */}
-          <div className="grid grid-cols-6 gap-2 mb-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="train-window rounded-lg h-10 backdrop-blur-sm border border-white/40" />
-            ))}
-          </div>
+          <div className="flex gap-3 md:gap-5 items-stretch">
+            {/* Left side windows (porthole column) */}
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
+              {Array.from({ length: rows }).map((_, i) => (
+                <div key={`lw-${i}`} className="train-window flex-1 min-h-[40px] rounded-xl border border-white/50 shadow-inner" />
+              ))}
+            </div>
 
-          <div className="grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 40px 1fr 1fr" }}>
-            {Array.from({ length: rows }).map((_, rowIdx) => {
-              const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-              const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-              const renderSeat = (seat: string | undefined) => {
-                if (!seat) return <div key={Math.random()} />;
-                const isBooked = bookedSeats.includes(seat);
-                const isSelected = selectedSeats.includes(seat);
+            <div className="flex-1 grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 40px 1fr 1fr" }}>
+              {Array.from({ length: rows }).map((_, rowIdx) => {
+                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
+                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
+                const renderSeat = (seat: string | undefined) => {
+                  if (!seat) return <div key={Math.random()} />;
+                  const isBooked = bookedSeats.includes(seat);
+                  const isSelected = selectedSeats.includes(seat);
+                  return (
+                    <button
+                      key={seat}
+                      onClick={() => toggleSeat(seat)}
+                      disabled={isBooked}
+                      className={cn(
+                        "seat-btn",
+                        isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                      )}
+                    >
+                      <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                    </button>
+                  );
+                };
                 return (
-                  <button
-                    key={seat}
-                    onClick={() => toggleSeat(seat)}
-                    disabled={isBooked}
-                    className={cn(
-                      "seat-btn",
-                      isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
-                    )}
-                  >
-                    <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
-                  </button>
+                  <div key={`row-${rowIdx}`} className="contents">
+                    {left.map(renderSeat)}
+                    <div className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
+                      {rowIdx + 1}
+                    </div>
+                    {right.map(renderSeat)}
+                  </div>
                 );
-              };
-              return [
-                ...left.map(renderSeat),
-                <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
-                  {rowIdx + 1}
-                </div>,
-                ...right.map(renderSeat),
-              ];
-            })}
-          </div>
+              })}
+            </div>
 
-          {/* Windows row backdrop bottom */}
-          <div className="grid grid-cols-6 gap-2 mt-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="train-window rounded-lg h-10 backdrop-blur-sm border border-white/40" />
-            ))}
+            {/* Right side windows (porthole column) */}
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
+              {Array.from({ length: rows }).map((_, i) => (
+                <div key={`rw-${i}`} className="train-window flex-1 min-h-[40px] rounded-xl border border-white/50 shadow-inner" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
