@@ -391,6 +391,9 @@ const MyReservations = () => {
                     <div className="flex gap-1">
                       {r.status === "Confirmed" && (
                         <>
+                          <Button variant="ghost" size="icon" title="Present ticket" onClick={() => openPresentTicket(r)}>
+                            <Ticket className="h-4 w-4 text-primary" />
+                          </Button>
                           <Button variant="ghost" size="icon" title="Reallocate seats" onClick={() => openSeatReallocation(r)}>
                             <ArrowLeftRight className="h-4 w-4" />
                           </Button>
