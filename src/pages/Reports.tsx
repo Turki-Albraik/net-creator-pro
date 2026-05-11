@@ -111,7 +111,7 @@ const Reports = () => {
     // Brand palette (matches app theme)
     const C_PRIMARY = "#B59410";   // brass
     const C_SECONDARY = "#1A4332"; // forest
-    const C_TERTIARY = "#243A6B";  // navy
+    const C_TERTIARY = "#B59410";  // brass (harmonized)
     const C_TEXT = "#0B1F17";
     const C_MUTED = "#6B7280";
     const C_BORDER = "#E5DFC6";
@@ -328,7 +328,7 @@ const Reports = () => {
                     <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} unit="%" />
                     <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} formatter={(v: number) => `${v}%`} />
-                    <Bar dataKey="value" fill="hsl(210, 60%, 50%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
