@@ -12,9 +12,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['"Playfair Display"', 'serif'],
-        serif: ['"Playfair Display"', 'serif'],
+        sans: ['Calibri', 'Carlito', 'Segoe UI', 'Tahoma', 'sans-serif'],
+        display: ['Calibri', 'Carlito', 'Segoe UI', 'Tahoma', 'sans-serif'],
+        serif: ['Calibri', 'Carlito', 'Segoe UI', 'Tahoma', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
