@@ -192,15 +192,8 @@ const MyReservations = () => {
   };
 
   const openPresentTicket = async (res: Reservation) => {
-    const payload = JSON.stringify({
-      booking: res.booking_id,
-      train: res.train_id,
-      from: res.source,
-      to: res.destination,
-      date: res.travel_date,
-      seats: res.seat_numbers,
-    });
-    const qr = await QRCode.toDataURL(payload, {
+    const ticketUrl = `${window.location.origin}/ticket/${res.booking_id}`;
+    const qr = await QRCode.toDataURL(ticketUrl, {
       errorCorrectionLevel: "M",
       margin: 1,
       width: 320,
