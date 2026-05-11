@@ -71,47 +71,48 @@ const TrainScheduleTable = () => {
         <h3 className="font-display text-lg font-semibold text-card-foreground">Today's Schedules</h3>
         <p className="text-sm text-muted-foreground mt-0.5">Live overview of active train services</p>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="font-semibold">Train ID</TableHead>
-            <TableHead className="font-semibold">Route</TableHead>
-            <TableHead className="font-semibold">Departure</TableHead>
-            <TableHead className="font-semibold">Arrival</TableHead>
-            <TableHead className="font-semibold">Occupancy</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {schedules.length === 0 && (
-            <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No trains scheduled</TableCell></TableRow>
-          )}
-          {schedules.map((s) => {
-            const occupancy = s.total_seats > 0 ? (s.booked / s.total_seats) * 100 : 0;
-            // Show "Full" if all seats booked, otherwise show the status from schedules
-            const displayStatus = s.booked >= s.total_seats ? "Full" : s.status;
-            return (
-              <TableRow key={s.id}>
-                <TableCell className="font-mono font-medium text-foreground">{s.train_id}</TableCell>
-                <TableCell>{s.source} → {s.destination}</TableCell>
-                <TableCell>{s.departure_time}</TableCell>
-                <TableCell>{s.arrival_time}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-secondary transition-all" style={{ width: `${Math.min(occupancy, 100)}%` }} />
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="font-semibold whitespace-nowrap">Train ID</TableHead>
+              <TableHead className="font-semibold whitespace-nowrap">Route</TableHead>
+              <TableHead className="font-semibold whitespace-nowrap">Departure</TableHead>
+              <TableHead className="font-semibold whitespace-nowrap">Arrival</TableHead>
+              <TableHead className="font-semibold whitespace-nowrap">Occupancy</TableHead>
+              <TableHead className="font-semibold whitespace-nowrap">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {schedules.length === 0 && (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No trains scheduled</TableCell></TableRow>
+            )}
+            {schedules.map((s) => {
+              const occupancy = s.total_seats > 0 ? (s.booked / s.total_seats) * 100 : 0;
+              const displayStatus = s.booked >= s.total_seats ? "Full" : s.status;
+              return (
+                <TableRow key={s.id}>
+                  <TableCell className="font-mono font-medium text-foreground whitespace-nowrap">{s.train_id}</TableCell>
+                  <TableCell className="whitespace-nowrap">{s.source} → {s.destination}</TableCell>
+                  <TableCell className="whitespace-nowrap">{s.departure_time}</TableCell>
+                  <TableCell className="whitespace-nowrap">{s.arrival_time}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-16 sm:w-20 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-secondary transition-all" style={{ width: `${Math.min(occupancy, 100)}%` }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{s.booked}/{s.total_seats}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{s.booked}/{s.total_seats}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant(displayStatus)}>{displayStatus}</Badge>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(displayStatus)}>{displayStatus}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
