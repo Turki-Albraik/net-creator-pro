@@ -1,106 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 30% 12%;
+    /* Brand Colors (raw) */
+    --brand-dark:        #0D1F12;
+    --brand-deep:        #163020;
+    --brand-forest:      #1E4D2B;
+    --brand-emerald:     #2D7A45;
+    --brand-mint:        #3DAA62;
+    --brand-glow:        #52C97A;
+    --brand-accent:      #F5A623;
+    --brand-accent-soft: #FFC94D;
+    --brand-coral:       #E8503A;
+    --brand-surface:     #F2F7F4;
+    --brand-white:       #FFFFFF;
+    --brand-muted:       #8FA99A;
+    --brand-border:      #D4E4DA;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
-
-    --primary: 220 60% 20%;
-    --primary-foreground: 40 100% 97%;
-
-    --secondary: 35 100% 55%;
-    --secondary-foreground: 220 60% 10%;
-
-    --muted: 220 15% 92%;
-    --muted-foreground: 220 10% 45%;
-
-    --accent: 35 95% 50%;
-    --accent-foreground: 220 60% 10%;
-
-    --destructive: 0 72% 51%;
+    /* shadcn/ui tokens (HSL space-separated) */
+    --background:        150 25% 96%;
+    --foreground:        150 60% 8%;
+    --card:              0 0% 100%;
+    --card-foreground:   150 60% 8%;
+    --popover:           0 0% 100%;
+    --popover-foreground:150 60% 8%;
+    --primary:           140 56% 20%;
+    --primary-foreground:0 0% 100%;
+    --secondary:         140 30% 88%;
+    --secondary-foreground:140 56% 12%;
+    --muted:             140 15% 90%;
+    --muted-foreground:  140 12% 45%;
+    --accent:            38 90% 55%;
+    --accent-foreground: 150 60% 8%;
+    --destructive:       10 75% 55%;
     --destructive-foreground: 0 0% 100%;
+    --border:            140 20% 84%;
+    --input:             140 20% 84%;
+    --ring:              140 56% 20%;
+    --radius:            0.875rem;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 60% 20%;
+    --sidebar-background:        150 60% 8%;
+    --sidebar-foreground:        140 20% 90%;
+    --sidebar-primary:           38 90% 55%;
+    --sidebar-primary-foreground:150 60% 8%;
+    --sidebar-accent:            140 45% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border:            140 35% 14%;
+    --sidebar-ring:              38 90% 55%;
 
-    --radius: 0.75rem;
-
-    --sidebar-background: 220 60% 14%;
-    --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 35 100% 55%;
-    --sidebar-primary-foreground: 220 60% 10%;
-    --sidebar-accent: 220 50% 22%;
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 40% 22%;
-    --sidebar-ring: 35 100% 55%;
-
-    --train-steel: 220 20% 35%;
-    --train-track: 220 15% 75%;
-    --train-signal: 145 60% 42%;
-    --train-warning: 45 100% 52%;
+    --train-steel:   140 15% 40%;
+    --train-track:   140 10% 70%;
+    --train-signal:  140 56% 40%;
+    --train-warning: 38 90% 55%;
   }
 
   .dark {
-    --background: 220 30% 8%;
-    --foreground: 220 15% 92%;
-
-    --card: 220 30% 12%;
-    --card-foreground: 220 15% 92%;
-
-    --popover: 220 30% 12%;
-    --popover-foreground: 220 15% 92%;
-
-    --primary: 35 100% 55%;
-    --primary-foreground: 220 60% 10%;
-
-    --secondary: 220 40% 22%;
-    --secondary-foreground: 220 15% 90%;
-
-    --muted: 220 30% 16%;
-    --muted-foreground: 220 10% 55%;
-
-    --accent: 35 95% 50%;
-    --accent-foreground: 220 60% 10%;
-
-    --destructive: 0 62.8% 30.6%;
+    --background:        150 40% 6%;
+    --foreground:        140 15% 92%;
+    --card:              150 40% 10%;
+    --card-foreground:   140 15% 92%;
+    --popover:           150 40% 10%;
+    --popover-foreground:140 15% 92%;
+    --primary:           38 90% 55%;
+    --primary-foreground:150 60% 8%;
+    --secondary:         140 30% 18%;
+    --secondary-foreground:140 15% 92%;
+    --muted:             140 20% 14%;
+    --muted-foreground:  140 10% 60%;
+    --accent:            38 90% 55%;
+    --accent-foreground: 150 60% 8%;
+    --destructive:       10 70% 45%;
     --destructive-foreground: 0 0% 100%;
+    --border:            140 25% 16%;
+    --input:             140 25% 16%;
+    --ring:              38 90% 55%;
 
-    --border: 220 30% 18%;
-    --input: 220 30% 18%;
-    --ring: 35 100% 55%;
-
-    --sidebar-background: 220 40% 6%;
-    --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 35 100% 55%;
-    --sidebar-primary-foreground: 220 60% 10%;
-    --sidebar-accent: 220 40% 14%;
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 30% 14%;
-    --sidebar-ring: 35 100% 55%;
-
-    --train-steel: 220 15% 55%;
-    --train-track: 220 10% 40%;
-    --train-signal: 145 55% 48%;
-    --train-warning: 45 95% 55%;
+    --sidebar-background:        150 60% 5%;
+    --sidebar-foreground:        140 20% 88%;
+    --sidebar-primary:           38 90% 55%;
+    --sidebar-primary-foreground:150 60% 8%;
+    --sidebar-accent:            140 45% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border:            140 35% 12%;
+    --sidebar-ring:              38 90% 55%;
   }
-}
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -108,9 +106,10 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+  h1, h2, h3, h4, h5, h6, .serif {
+    font-family: 'DM Serif Display', serif;
   }
 }
