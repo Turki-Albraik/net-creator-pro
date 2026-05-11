@@ -126,14 +126,6 @@ const Sidebar = () => {
       )}
     </div>
   );
-      <button
-        onClick={handleLogout}
-        title="Sign Out"
-        className="hidden"
-        aria-hidden
-      />
-    </div>
-  );
 
   return (
     <>
