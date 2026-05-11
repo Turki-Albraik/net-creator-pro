@@ -57,8 +57,8 @@ const Sidebar = () => {
           <div className="flex items-center gap-3">
             <img src={logoImg} alt="سِـكَّـة logo" className="h-10 w-10 rounded-lg object-cover" />
             <div>
-              <h1 className="font-display text-lg font-bold text-sidebar-foreground">سِـكَّـة</h1>
-              <p className="text-xs text-sidebar-foreground/60">Management System</p>
+              <h1 className="font-display text-xl font-bold text-sidebar-primary tracking-wide">سِـكَّـة</h1>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-sidebar-foreground/60">Railways</p>
             </div>
           </div>
           <Button
