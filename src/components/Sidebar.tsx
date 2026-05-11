@@ -86,10 +86,10 @@ const Sidebar = () => {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-inter uppercase tracking-widest font-semibold transition-colors border-l-2",
                   isActive
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    ? "bg-sidebar-accent text-rail-gold border-rail-gold"
+                    : "text-sidebar-foreground/60 border-transparent hover:bg-sidebar-accent/50 hover:text-rail-gold"
                 )
               }
             >
