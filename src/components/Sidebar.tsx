@@ -55,8 +55,8 @@ const Sidebar = () => {
             cn(
               "flex items-center gap-3 rounded-xl px-2.5 py-3 transition-all duration-200 group relative",
               isActive
-                ? "bg-forest-800 text-white border border-forest-700"
-                : "text-[#8FA99A] hover:bg-forest-900 hover:text-white"
+                ? "bg-forest-800 dark:bg-navy-800 text-white border border-forest-700 dark:border-navy-700"
+                : "text-[#8FA99A] hover:bg-forest-900 dark:hover:bg-navy-900 hover:text-white"
             )
           }
         >
@@ -70,7 +70,7 @@ const Sidebar = () => {
             {item.label}
           </span>
           {!expanded && (
-            <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-forest-950 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg z-50">
+            <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-forest-950 dark:bg-navy-950 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg z-50">
               {item.label}
             </span>
           )}
@@ -80,7 +80,7 @@ const Sidebar = () => {
   );
 
   const LogoRow = ({ expanded, withClose }: { expanded: boolean; withClose?: boolean }) => (
-    <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800">
+    <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800 dark:border-navy-800">
       <img src={logoImg} alt="سِـكَّـة" className="h-10 w-10 rounded-lg object-cover shrink-0" />
       <div
         className={cn(
@@ -108,7 +108,7 @@ const Sidebar = () => {
         <button
           onClick={handleLogout}
           title="Sign Out"
-          className="w-full flex items-center gap-3 p-2 rounded-xl bg-forest-900 border border-forest-800 hover:border-amber-brand/60 transition-colors group"
+          className="w-full flex items-center gap-3 p-2 rounded-xl bg-forest-900 dark:bg-navy-900 border border-forest-800 dark:border-navy-800 hover:border-amber-brand/60 transition-colors group"
         >
           <div className="h-9 w-9 rounded-full bg-amber-brand text-forest-950 flex items-center justify-center font-bold text-sm shrink-0">
             {userInitials}
@@ -130,10 +130,10 @@ const Sidebar = () => {
   return (
     <>
       {/* MOBILE HEADER */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-forest-950 border-b border-forest-800 flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-forest-950 dark:bg-navy-950 border-b border-forest-800 dark:border-navy-800 flex items-center justify-between px-4">
         <button
           onClick={() => setMobileOpen(true)}
-          className="w-9 h-9 rounded-lg bg-forest-900 flex items-center justify-center text-white"
+          className="w-9 h-9 rounded-lg bg-forest-900 dark:bg-navy-900 flex items-center justify-center text-white"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -150,7 +150,7 @@ const Sidebar = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 bg-forest-950 border-r border-forest-800",
+          "hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 bg-forest-950 dark:bg-navy-950 border-r border-forest-800 dark:border-navy-800",
           "transition-all duration-300 ease-in-out overflow-hidden",
           isHovered ? "w-[260px] shadow-2xl" : "w-16"
         )}
@@ -164,10 +164,10 @@ const Sidebar = () => {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 animate-fade-in">
           <div
-            className="absolute inset-0 bg-forest-950/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-forest-950 dark:bg-navy-950/70 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative w-[280px] h-full bg-forest-950 border-r border-forest-800 flex flex-col animate-slide-in">
+          <aside className="relative w-[280px] h-full bg-forest-950 dark:bg-navy-950 border-r border-forest-800 dark:border-navy-800 flex flex-col animate-slide-in">
             <LogoRow expanded withClose />
             <NavList expanded onNavigate={() => setMobileOpen(false)} />
             <UserCard expanded />
