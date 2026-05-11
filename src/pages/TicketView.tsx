@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import QRCode from "qrcode";
+import { generateBarcodeDataUrl } from "@/lib/barcode";
 
 interface TicketData {
   booking_id: string;
