@@ -2,112 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800;900&display=swap');
-
-/* Railway-inspired design tokens. All colors in HSL. */
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
 
 @layer base {
   :root {
-    /* Surface */
-    --background: 220 33% 97%;          /* #F4F6FA */
-    --foreground: 217 60% 10%;          /* #0A1628 */
+    --background: 220 20% 97%;
+    --foreground: 220 30% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 217 60% 10%;
+    --card-foreground: 220 30% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 217 60% 10%;
+    --popover-foreground: 220 30% 12%;
 
-    /* Primary = Deep Railway Navy */
-    --primary: 217 60% 10%;             /* #0A1628 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 220 60% 20%;
+    --primary-foreground: 40 100% 97%;
 
-    /* Secondary = Steel Blue */
-    --secondary: 217 59% 26%;           /* #1B3A6B */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 35 100% 55%;
+    --secondary-foreground: 220 60% 10%;
 
-    --muted: 220 25% 94%;
-    --muted-foreground: 218 17% 35%;    /* #4A5568 */
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
 
-    /* Accent = Golden Amber */
-    --accent: 43 78% 46%;               /* #D4A017 */
-    --accent-foreground: 217 60% 10%;
+    --accent: 35 95% 50%;
+    --accent-foreground: 220 60% 10%;
 
-    --destructive: 0 73% 51%;           /* #DC2626 */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 36%;             /* #16A34A */
-    --success-foreground: 0 0% 100%;
-
-    --border: 220 16% 90%;
-    --input: 220 16% 90%;
-    --ring: 217 59% 26%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 60% 20%;
 
     --radius: 0.75rem;
 
-    /* Sidebar (always dark navy) */
-    --sidebar-background: 217 60% 10%;
-    --sidebar-foreground: 215 25% 70%;
-    --sidebar-primary: 43 78% 46%;
-    --sidebar-primary-foreground: 217 60% 10%;
-    --sidebar-accent: 217 59% 18%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 59% 18%;
-    --sidebar-ring: 43 78% 46%;
+    --sidebar-background: 220 60% 14%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 35 100% 55%;
+    --sidebar-primary-foreground: 220 60% 10%;
+    --sidebar-accent: 220 50% 22%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 40% 22%;
+    --sidebar-ring: 35 100% 55%;
 
-    --train-steel: 217 59% 26%;
-    --train-track: 220 16% 80%;
-    --train-signal: 142 71% 36%;
-    --train-warning: 43 78% 46%;
+    --train-steel: 220 20% 35%;
+    --train-track: 220 15% 75%;
+    --train-signal: 145 60% 42%;
+    --train-warning: 45 100% 52%;
   }
 
   .dark {
-    --background: 217 60% 6%;
-    --foreground: 220 20% 94%;
+    --background: 220 30% 8%;
+    --foreground: 220 15% 92%;
 
-    --card: 217 59% 11%;
-    --card-foreground: 220 20% 94%;
+    --card: 220 30% 12%;
+    --card-foreground: 220 15% 92%;
 
-    --popover: 217 59% 11%;
-    --popover-foreground: 220 20% 94%;
+    --popover: 220 30% 12%;
+    --popover-foreground: 220 15% 92%;
 
-    --primary: 43 78% 46%;
-    --primary-foreground: 217 60% 10%;
+    --primary: 35 100% 55%;
+    --primary-foreground: 220 60% 10%;
 
-    --secondary: 217 59% 22%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 40% 22%;
+    --secondary-foreground: 220 15% 90%;
 
-    --muted: 217 40% 16%;
-    --muted-foreground: 215 20% 70%;
+    --muted: 220 30% 16%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 43 78% 50%;
-    --accent-foreground: 217 60% 10%;
+    --accent: 35 95% 50%;
+    --accent-foreground: 220 60% 10%;
 
-    --destructive: 0 73% 45%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 42%;
-    --success-foreground: 0 0% 100%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 35 100% 55%;
 
-    --border: 217 40% 18%;
-    --input: 217 40% 18%;
-    --ring: 43 78% 46%;
+    --sidebar-background: 220 40% 6%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 35 100% 55%;
+    --sidebar-primary-foreground: 220 60% 10%;
+    --sidebar-accent: 220 40% 14%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 30% 14%;
+    --sidebar-ring: 35 100% 55%;
 
-    --sidebar-background: 217 60% 5%;
-    --sidebar-foreground: 215 25% 75%;
-    --sidebar-primary: 43 78% 50%;
-    --sidebar-primary-foreground: 217 60% 10%;
-    --sidebar-accent: 217 59% 14%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 40% 14%;
-    --sidebar-ring: 43 78% 50%;
-
-    --train-steel: 215 25% 55%;
+    --train-steel: 220 15% 55%;
     --train-track: 220 10% 40%;
-    --train-signal: 142 65% 48%;
-    --train-warning: 43 78% 55%;
+    --train-signal: 145 55% 48%;
+    --train-warning: 45 95% 55%;
   }
 }
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @layer base {
   * {
@@ -116,61 +107,10 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
+    font-family: 'DM Sans', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.01em;
-  }
-}
-
-/* ───── Railway design utilities ───── */
-@layer utilities {
-  .font-display { font-family: 'Playfair Display', Georgia, serif; }
-  .font-body { font-family: 'Inter', system-ui, sans-serif; }
-
-  .label-caps {
-    @apply uppercase tracking-widest text-xs font-semibold text-muted-foreground;
-  }
-
-  /* Decorative train window – used in seat map */
-  .train-window {
-    width: 40px;
-    height: 64px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #7EB8D4 0%, #B8DFF0 50%, #5A9DC0 100%);
-    border: 3px solid #0A1628;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 1px 3px rgba(255,255,255,0.15);
-    flex-shrink: 0;
-  }
-
-  /* Faint diagonal railway pattern, dark backgrounds only */
-  .railway-pattern {
-    background-image:
-      repeating-linear-gradient(
-        45deg,
-        rgba(212, 160, 23, 0.04) 0px,
-        rgba(212, 160, 23, 0.04) 1px,
-        transparent 1px,
-        transparent 14px
-      );
-  }
-
-  .ticket-watermark {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    font-family: 'Playfair Display', serif;
-    font-weight: 900;
-    font-size: 8rem;
-    color: hsl(var(--primary) / 0.05);
-    transform: rotate(-18deg);
-    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', sans-serif;
   }
 }

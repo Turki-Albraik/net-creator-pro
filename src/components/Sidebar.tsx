@@ -57,8 +57,8 @@ const Sidebar = () => {
           <div className="flex items-center gap-3">
             <img src={logoImg} alt="سِـكَّـة logo" className="h-10 w-10 rounded-lg object-cover" />
             <div>
-              <h1 className="font-display text-xl font-bold text-sidebar-primary tracking-wide">سِـكَّـة</h1>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-sidebar-foreground/60">Railways</p>
+              <h1 className="font-display text-lg font-bold text-sidebar-foreground">سِـكَّـة</h1>
+              <p className="text-xs text-sidebar-foreground/60">Management System</p>
             </div>
           </div>
           <Button
@@ -78,10 +78,10 @@ const Sidebar = () => {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all border-l-4",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-sidebar-accent text-white border-sidebar-primary"
-                    : "border-transparent text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                 )
               }
             >
