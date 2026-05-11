@@ -50,13 +50,15 @@ const Index = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, () => fetchStats())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchStats]);
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 md:ml-16 pt-20 md:pt-8 px-4 md:px-8 pb-8">
+      <main className="flex-1 ml-64 p-8">
         <DashboardHeader title="Dashboard" subtitle="Welcome back — here's what's happening today" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
