@@ -328,84 +328,55 @@ const NewReservation = () => {
       const letter = ["A", "B", "C", "D"][col];
       seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
     }
-
-    const seatBtn = (seat: string) => {
-      const isBooked = bookedSeats.includes(seat);
-      const isSelected = selectedSeats.includes(seat);
-      return (
-        <button
-          key={seat}
-          onClick={() => toggleSeat(seat)}
-          disabled={isBooked}
-          className={cn(
-            "w-9 h-10 rounded-lg border-2 text-[10px] font-mono font-semibold transition-all flex items-center justify-center",
-            isBooked
-              ? "bg-[hsl(var(--muted))] border-[hsl(var(--border))] text-muted-foreground/60 cursor-not-allowed"
-              : isSelected
-              ? "bg-primary border-primary text-primary-foreground shadow-md"
-              : "bg-white border-primary/70 text-primary hover:bg-primary/10"
-          )}
-        >
-          {seat}
-        </button>
-      );
-    };
-
     return (
-      <div className="space-y-6">
-        {/* Carriage selector */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground mr-2">Carriage:</span>
-          {[1, 2, 3].map((c) => (
-            <div
-              key={c}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap",
-                c === 1
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-white text-muted-foreground border-border"
-              )}
-            >
-              Car {c}
-            </div>
-          ))}
+      <div className="space-y-3">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-muted border border-border" /> Available</span>
+          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-primary" /> Selected</span>
+          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-destructive/30" /> Booked</span>
         </div>
-
-        {/* Direction indicator */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Train className="h-3.5 w-3.5" />
-          Direction of Travel →
-        </div>
-
-        {/* Carriage diagram */}
-        <div className="overflow-x-auto">
-          <div className="relative mx-auto min-w-[420px] max-w-2xl border-4 border-primary rounded-[2.5rem] bg-gradient-to-b from-white to-[hsl(var(--background))] p-6 pl-12 pr-12 shadow-sm">
-            {/* nose / tail accents */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1.5 w-3 h-16 bg-primary rounded-l-full" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1.5 w-3 h-16 bg-primary rounded-r-full" />
-
-            <div className="flex flex-col gap-2.5">
-              {Array.from({ length: rows }).map((_, rowIdx) => {
-                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]].filter(Boolean);
-                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-                return (
-                  <div key={rowIdx} className="flex items-center gap-2">
-                    <span className="w-6 text-[10px] font-mono text-muted-foreground text-right">{rowIdx + 1}</span>
-                    <div className="flex gap-1.5">{left.map(seatBtn)}</div>
-                    <div className="flex-1 mx-2 border-t-2 border-dashed border-border/70 min-w-[24px]" />
-                    <div className="flex gap-1.5">{right.map(seatBtn)}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground pt-2">
-          <span className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-white border-2 border-primary/70" /> Available</span>
-          <span className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-primary" /> Selected</span>
-          <span className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-[hsl(var(--muted))] border-2 border-border" /> Occupied</span>
+        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr auto 1fr 1fr" }}>
+          {Array.from({ length: rows }).map((_, rowIdx) => {
+            const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
+            const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
+            return [
+              ...left.map((seat) => (
+                <button
+                  key={seat}
+                  onClick={() => toggleSeat(seat)}
+                  disabled={bookedSeats.includes(seat)}
+                  className={cn(
+                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
+                    bookedSeats.includes(seat)
+                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
+                      : selectedSeats.includes(seat)
+                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
+                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
+                  )}
+                >
+                  {seat}
+                </button>
+              )),
+              <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-muted-foreground/30 text-xs">│</div>,
+              ...right.map((seat) => (
+                <button
+                  key={seat}
+                  onClick={() => toggleSeat(seat)}
+                  disabled={bookedSeats.includes(seat)}
+                  className={cn(
+                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
+                    bookedSeats.includes(seat)
+                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
+                      : selectedSeats.includes(seat)
+                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
+                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
+                  )}
+                >
+                  {seat}
+                </button>
+              )),
+            ];
+          })}
         </div>
       </div>
     );
