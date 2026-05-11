@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
 import logoImg from "@/assets/logo.png";
 
 const Login = () => {
@@ -58,15 +57,6 @@ const Login = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-            <GoogleSignInButton label="Sign in with Google" />
             <p className="text-center text-sm text-muted-foreground">
               New passenger?{" "}
               <Link to="/signup" className="text-primary hover:underline font-medium">Create an account</Link>

@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo.png";
 import PasswordChecklist from "@/components/PasswordChecklist";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
@@ -132,15 +131,6 @@ const Signup = () => {
             <Button type="submit" className="w-full" disabled={loading || !isPasswordValid(password)}>
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-            <GoogleSignInButton label="Sign up with Google" />
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
