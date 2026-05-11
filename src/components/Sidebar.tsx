@@ -56,7 +56,7 @@ const Sidebar = () => {
               "flex items-center gap-3 rounded-xl px-2.5 py-3 transition-all duration-200 group relative",
               isActive
                 ? "bg-forest-800 dark:bg-navy-800 text-white border border-forest-700 dark:border-navy-700"
-                : "text-[#8FA99A] hover:bg-forest-900 dark:hover:bg-navy-900 dark:bg-navy-900 hover:text-white"
+                : "text-[#8FA99A] hover:bg-forest-900 dark:hover:bg-navy-900 hover:text-white"
             )
           }
         >
