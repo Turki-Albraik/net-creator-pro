@@ -13,15 +13,15 @@ const adminNavItems = [
   { icon: Users, label: "Passengers", to: "/passengers" },
   { icon: UserCog, label: "Employees", to: "/employees" },
   { icon: BarChart3, label: "Reports", to: "/reports" },
-  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 const passengerNavItems = [
   { icon: TicketCheck, label: "New Reservation", to: "/reservations/new" },
   { icon: History, label: "My Reservations", to: "/my-reservations" },
   { icon: User, label: "My Profile", to: "/my-profile" },
-  { icon: Settings, label: "Settings", to: "/settings" },
 ];
+
+const settingsItem = { icon: Settings, label: "Settings", to: "/settings" };
 
 const Sidebar = () => {
   const { employee, logout } = useAuth();
