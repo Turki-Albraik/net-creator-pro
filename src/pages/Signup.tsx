@@ -78,66 +78,82 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
-            <img src={logoImg} alt="سِـكَّـة logo" className="h-14 w-14 rounded-xl object-cover" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">سِـكَّـة</CardTitle>
-            <CardDescription className="mt-1">Create a new Passenger account</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" />
-              {email && !validateEmail(email) && <p className="text-xs text-destructive">Please enter a valid email</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Phone (9 digits) *</Label>
-              <div className="flex gap-2">
-                <Select value={countryCode} onValueChange={setCountryCode}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {countryCodes.map((cc) => (
-                      <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
-                  placeholder="5XXXXXXXX"
-                  maxLength={9}
-                  className="flex-1"
-                />
+    <div className="min-h-screen flex flex-col md:flex-row bg-background">
+      <div className="relative md:w-1/2 bg-primary text-primary-foreground flex flex-col items-center justify-center p-10 railway-pattern overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-accent/40" />
+        <div className="relative z-10 text-center max-w-sm">
+          <img src={logoImg} alt="سِـكَّـة logo" className="h-20 w-20 rounded-2xl object-cover mx-auto mb-6 ring-4 ring-accent/30" />
+          <h1 className="font-display text-5xl font-bold text-accent mb-3">سِـكَّـة</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-primary-foreground/70 mb-8">Sikkah Railways</p>
+          <p className="text-base text-primary-foreground/80 leading-relaxed">
+            Book your seat. Track your journey. Travel the modern way.
+          </p>
+          <svg viewBox="0 0 200 40" className="mt-10 w-full opacity-40" fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5">
+            <line x1="0" y1="14" x2="200" y2="14" />
+            <line x1="0" y1="26" x2="200" y2="26" />
+            {Array.from({ length: 20 }).map((_, i) => (
+              <line key={i} x1={i * 10 + 2} y1="10" x2={i * 10 + 2} y2="30" />
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-6 md:p-10">
+        <Card className="w-full max-w-md border-l-4 border-l-accent shadow-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-display text-3xl font-semibold text-primary">Create account</CardTitle>
+            <CardDescription className="mt-1 label-caps">Passenger registration</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="label-caps">Full Name *</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" className="h-11" />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password" />
-              {password && getPasswordError(password) && (
-                <p className="text-xs text-destructive">{getPasswordError(password)}</p>
-              )}
-              <PasswordChecklist password={password} />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading || !isPasswordValid(password)}>
-              {loading ? "Creating Account..." : "Sign Up"}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="label-caps">Email *</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" className="h-11" />
+                {email && !validateEmail(email) && <p className="text-xs text-destructive">Please enter a valid email</p>}
+              </div>
+              <div className="space-y-2">
+                <Label className="label-caps">Phone (9 digits) *</Label>
+                <div className="flex gap-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="w-36 h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((cc) => (
+                        <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="5XXXXXXXX"
+                    maxLength={9}
+                    className="flex-1 h-11"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="label-caps">Password *</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password" className="h-11" />
+                {password && getPasswordError(password) && (
+                  <p className="text-xs text-destructive">{getPasswordError(password)}</p>
+                )}
+                <PasswordChecklist password={password} />
+              </div>
+              <Button type="submit" className="w-full h-11 font-semibold tracking-wide" disabled={loading || !isPasswordValid(password)}>
+                {loading ? "Creating Account..." : "Sign Up"}
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link to="/login" className="text-accent hover:underline font-semibold">Sign In</Link>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
