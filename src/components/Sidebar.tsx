@@ -157,7 +157,6 @@ const Sidebar = () => {
       >
         <LogoRow expanded={isHovered} />
         <NavList expanded={isHovered} />
-        <UserCard expanded={isHovered} />
       </aside>
 
       {/* MOBILE DRAWER */}
