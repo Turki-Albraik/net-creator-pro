@@ -69,9 +69,13 @@ const NewReservation = () => {
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdRafRef = useRef<number | null>(null);
 
   const [sourceFilter, setSourceFilter] = useState("");
   const [destFilter, setDestFilter] = useState("");
+  const [sortBy, setSortBy] = useState<"price" | "departure">("departure");
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -138,11 +142,16 @@ const NewReservation = () => {
   const sources = [...new Set(routes.map((r) => r.source))];
   const destinations = [...new Set(routes.map((r) => r.destination))].filter((d) => d !== sourceFilter);
 
-  const filteredRoutes = routes.filter(
-    (r) =>
-      (!sourceFilter || r.source === sourceFilter) &&
-      (!destFilter || r.destination === destFilter)
-  );
+  const filteredRoutes = routes
+    .filter(
+      (r) =>
+        (!sourceFilter || r.source === sourceFilter) &&
+        (!destFilter || r.destination === destFilter)
+    )
+    .sort((a, b) => {
+      if (sortBy === "price") return a.price_per_ticket - b.price_per_ticket;
+      return a.departure_time.localeCompare(b.departure_time);
+    });
 
   const toggleSeat = (seat: string) => {
     if (bookedSeats.includes(seat)) return;
@@ -276,41 +285,93 @@ const NewReservation = () => {
     if (!selectedRoute || !travelDate) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    
+
     const passengersHtml = passengers.map((p, i) => `
       <div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>
     `).join("");
 
+    const stubSeat = selectedSeats[0] || "—";
+    const qrCells = Array.from({ length: 169 })
+      .map((_, i) => `<span style="background:${(i * 7 + (i % 11)) % 3 === 0 ? '#0F1E14' : 'transparent'}"></span>`)
+      .join("");
+
     printWindow.document.write(`
       <html><head><title>Ticket ${bookingId}</title>
       <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 40px; }
-        .ticket { border: 2px solid #1a2744; border-radius: 12px; padding: 32px; max-width: 500px; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 16px; margin-bottom: 16px; }
-        .header h1 { font-size: 20px; color: #1a2744; margin: 0; }
-        .header p { color: #888; font-size: 12px; margin: 4px 0 0; }
-        .row { display: flex; justify-content: space-between; padding: 6px 0; }
-        .label { color: #888; font-size: 13px; }
-        .value { font-weight: 600; font-size: 14px; }
-        .route { text-align: center; font-size: 22px; font-weight: 700; color: #1a2744; padding: 12px 0; }
-        .seats { text-align: center; background: #f5f5f5; padding: 10px; border-radius: 8px; margin: 12px 0; font-weight: 600; }
-        .total { text-align: center; font-size: 24px; font-weight: 700; color: #c77d15; margin-top: 12px; }
-        @media print { body { padding: 20px; } }
+        @page { size: A5 landscape; margin: 12mm; }
+        * { box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          margin: 0; padding: 28px;
+          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          min-height: 100vh;
+        }
+        .ticket {
+          display: grid;
+          grid-template-columns: 1fr 200px;
+          max-width: 760px; margin: 0 auto;
+          background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid #B59410;
+          border-radius: 18px;
+          box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+          overflow: hidden;
+          color: #FDFCF5;
+        }
+        .main { padding: 26px 30px; position: relative; }
+        .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; }
+        .brand { display:flex; align-items:center; gap:10px; margin-bottom: 14px; }
+        .brand h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin:0; color: #F4E9B8; letter-spacing: 1px; }
+        .brand small { color:#D4B53A; font-size:10px; letter-spacing:3px; text-transform:uppercase; }
+        .route { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 700; margin: 8px 0 18px; color:#fff; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-top: 6px; }
+        .cell .label { color:#D4B53A; font-size:9px; letter-spacing:2px; text-transform:uppercase; display:block; margin-bottom:3px; }
+        .cell .value { font-size:14px; font-weight:600; color:#fff; }
+        .row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
+        .row .label { color:#D4B53A; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; }
+        .row .value { color:#fff; font-weight:600; }
+        .seats { margin-top: 18px; padding:10px 14px; border:1px solid rgba(181,148,16,0.5); border-radius:10px; font-family: monospace; letter-spacing:2px; color:#F4E9B8; text-align:center; font-weight:700; }
+        .stub .stub-label { font-size:9px; letter-spacing:3px; color:#D4B53A; text-transform:uppercase; }
+        .stub .seat { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; color:#F4E9B8; margin: 6px 0 4px; }
+        .stub .coach { font-size:11px; color:#fff; letter-spacing:1px; }
+        .qr { width:130px; height:130px; margin: 14px auto 6px; padding:8px; background:#F4E9B8; border-radius:8px; display:grid; grid-template-columns: repeat(13, 1fr); gap:1px; }
+        .qr span { display:block; width:100%; aspect-ratio:1/1; }
+        .stub .bk { font-family: monospace; font-size:10px; color:#0B1F17; background:#F4E9B8; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:1px; }
+        .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
+        .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
+        .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
+        @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       <div class="ticket">
-        <div class="header"><h1>🚄 سِـكَّـة</h1><p>E-Ticket</p></div>
-        <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
-        <div class="row"><span class="label">Booking ID</span><span class="value">${bookingId}</span></div>
-        ${passengersHtml}
-        <div class="row"><span class="label">Train</span><span class="value">${selectedRoute.train_id}</span></div>
-        <div class="row"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
-        <div class="row"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
-        <div class="row"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
-        <div class="row"><span class="label">Payment</span><span class="value">${paymentMethod}</span></div>
-        <div class="seats">Seats: ${selectedSeats.join(", ")}</div>
-        <div class="total">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</div>
+        <div class="main">
+          <div class="brand">
+            <h1>سِـكَّـة</h1>
+            <small>Sikkah · Heritage Rail</small>
+          </div>
+          <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
+          <div class="grid">
+            <div class="cell"><span class="label">Train</span><span class="value">${selectedRoute.train_id}</span></div>
+            <div class="cell"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
+            <div class="cell"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
+            <div class="cell"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
+          </div>
+          <div style="margin-top:14px">${passengersHtml}</div>
+          <div class="seats">SEATS · ${selectedSeats.join("  ·  ")}</div>
+          <div class="total">
+            <span class="lbl">Total Fare</span>
+            <span class="amt">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span>
+          </div>
+        </div>
+        <div class="stub">
+          <div class="stub-label">Boarding Stub</div>
+          <div class="seat">${stubSeat}</div>
+          <div class="coach">COACH A</div>
+          <div class="qr">${qrCells}</div>
+          <div class="bk">${bookingId}</div>
+        </div>
       </div>
-      <script>window.print();</script>
+      <script>setTimeout(()=>window.print(), 300);</script>
       </body></html>
     `);
     printWindow.document.close();
@@ -484,7 +545,19 @@ const NewReservation = () => {
             </div>
 
             <div className="space-y-3">
-              <h3 className="font-display text-lg font-semibold">Available Routes</h3>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h3 className="font-display text-lg font-semibold">Available Routes</h3>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground label-caps">Sort by</Label>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as "price" | "departure")}>
+                    <SelectTrigger className="w-[200px] h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="departure">Departure Time</SelectItem>
+                      <SelectItem value="price">Price (Low to High)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               {filteredRoutes.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No active routes found. Try different filters.</p>
               ) : (
@@ -638,7 +711,6 @@ const NewReservation = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -660,10 +732,43 @@ const NewReservation = () => {
 
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={() => setStep("seats")}>Back</Button>
-              <Button onClick={handleConfirm} disabled={isSubmitting}>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                {isSubmitting ? "Confirming..." : "Confirm Reservation"}
-              </Button>
+              <button
+                disabled={isSubmitting}
+                onPointerDown={() => {
+                  if (isSubmitting) return;
+                  const start = performance.now();
+                  const tick = () => {
+                    const p = Math.min(100, ((performance.now() - start) / 1200) * 100);
+                    setHoldProgress(p);
+                    if (p < 100) holdRafRef.current = requestAnimationFrame(tick);
+                  };
+                  holdRafRef.current = requestAnimationFrame(tick);
+                  holdTimerRef.current = window.setTimeout(() => {
+                    setHoldProgress(100);
+                    handleConfirm();
+                  }, 1200);
+                }}
+                onPointerUp={() => {
+                  if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+                  if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current);
+                  if (holdProgress < 100) setHoldProgress(0);
+                }}
+                onPointerLeave={() => {
+                  if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+                  if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current);
+                  if (holdProgress < 100) setHoldProgress(0);
+                }}
+                className="relative overflow-hidden h-11 px-6 rounded-md btn-brass font-semibold text-sm select-none disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                <span
+                  className="absolute inset-0 bg-white/25 origin-left transition-none pointer-events-none"
+                  style={{ transform: `scaleX(${holdProgress / 100})` }}
+                />
+                <CheckCircle2 className="h-4 w-4 relative z-10" />
+                <span className="relative z-10">
+                  {isSubmitting ? "Confirming..." : holdProgress > 0 && holdProgress < 100 ? "Keep holding…" : "Hold to Confirm"}
+                </span>
+              </button>
             </div>
           </div>
         )}

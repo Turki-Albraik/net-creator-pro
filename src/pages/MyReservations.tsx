@@ -311,7 +311,42 @@ const MyReservations = () => {
                 </TableRow>
               ))}
               {reservations.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No reservations yet</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12">
+                    <div className="flex flex-col items-center text-center gap-4">
+                      <svg viewBox="0 0 220 120" className="w-56 h-32 opacity-90" fill="none">
+                        <defs>
+                          <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0" stopColor="hsl(var(--muted))" />
+                            <stop offset="1" stopColor="hsl(var(--background))" />
+                          </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="220" height="80" fill="url(#sky)" />
+                        <rect x="0" y="80" width="220" height="6" fill="hsl(var(--primary))" opacity="0.7" />
+                        <rect x="0" y="92" width="220" height="2" fill="hsl(var(--muted-foreground))" opacity="0.4" />
+                        {Array.from({ length: 11 }).map((_, i) => (
+                          <rect key={i} x={i * 22} y="96" width="14" height="3" fill="hsl(var(--muted-foreground))" opacity="0.3" />
+                        ))}
+                        <rect x="30" y="40" width="6" height="46" fill="hsl(var(--muted-foreground))" opacity="0.5" />
+                        <rect x="20" y="36" width="26" height="6" fill="hsl(var(--primary))" />
+                        <circle cx="33" cy="50" r="3" fill="hsl(var(--primary))" opacity="0.6" />
+                        <rect x="140" y="55" width="60" height="25" rx="4" fill="hsl(var(--primary))" opacity="0.8" />
+                        <rect x="148" y="60" width="10" height="10" fill="hsl(var(--background))" />
+                        <rect x="162" y="60" width="10" height="10" fill="hsl(var(--background))" />
+                        <rect x="176" y="60" width="10" height="10" fill="hsl(var(--background))" />
+                        <circle cx="150" cy="84" r="4" fill="hsl(var(--foreground))" />
+                        <circle cx="190" cy="84" r="4" fill="hsl(var(--foreground))" />
+                      </svg>
+                      <div>
+                        <p className="font-display text-lg font-semibold text-foreground">The platform is quiet</p>
+                        <p className="text-sm text-muted-foreground mt-1">No reservations yet. Book your first journey to see it here.</p>
+                      </div>
+                      <Button className="gap-2" onClick={() => navigate("/reservations/new")}>
+                        <Plus className="h-4 w-4" /> Book a Journey
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
