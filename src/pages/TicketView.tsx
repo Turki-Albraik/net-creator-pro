@@ -227,7 +227,7 @@ const TicketView = () => {
                 {ticket.seat_numbers?.[0] || "—"}
               </p>
               {qr && (
-                <img src={qr} alt="QR" className="w-36 h-36 rounded-lg p-1.5" style={{ background: "#F4E9B8" }} />
+                <img src={qr} alt="Barcode" className="rounded-lg max-w-[200px] w-full p-1.5" style={{ background: "#F4E9B8" }} />
               )}
               <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
                 {ticket.booking_id}
