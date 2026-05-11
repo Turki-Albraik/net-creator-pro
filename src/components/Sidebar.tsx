@@ -1,10 +1,9 @@
-import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History, Train } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import logoImg from "@/assets/logo.png";
 
 const adminNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", to: "/" },
@@ -53,19 +52,28 @@ const Sidebar = () => {
         "fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center justify-between px-6 py-6 border-b border-sidebar-border">
+        {/* Premium announcement strip */}
+        <div className="bg-[#0D1929] border-b border-sidebar-border py-1.5 px-3 text-center">
+          <p className="text-[10px] font-inter uppercase tracking-widest text-rail-gold/90">
+            Premium Rail Service · Since 1952
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between px-5 py-5 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <img src={logoImg} alt="سِـكَّـة logo" className="h-10 w-10 rounded-lg object-cover" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-rail-gold to-rail-gold-deep shadow-rail-gold-soft">
+              <Train className="h-5 w-5 text-[#0B1120]" strokeWidth={2.25} />
+            </div>
             <div>
-              <h1 className="font-display text-lg font-bold text-sidebar-foreground">سِـكَّـة</h1>
-              <p className="text-xs text-sidebar-foreground/60">Management System</p>
+              <h1 className="font-playfair text-base font-bold text-rail-gold tracking-[0.18em]">RAIL CONNECT</h1>
+              <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 mt-0.5">سِـكَّـة · Premium Rail</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsOpen(false)}
-            className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-8 w-8"
+            className="text-sidebar-foreground/60 hover:text-rail-gold hover:bg-sidebar-accent/50 h-8 w-8"
           >
             <Menu className="h-4 w-4" />
           </Button>
@@ -78,10 +86,10 @@ const Sidebar = () => {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-inter uppercase tracking-widest font-semibold transition-colors border-l-2",
                   isActive
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    ? "bg-sidebar-accent text-rail-gold border-rail-gold"
+                    : "text-sidebar-foreground/60 border-transparent hover:bg-sidebar-accent/50 hover:text-rail-gold"
                 )
               }
             >
