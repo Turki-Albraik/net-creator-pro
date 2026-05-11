@@ -490,7 +490,19 @@ const NewReservation = () => {
             </div>
 
             <div className="space-y-3">
-              <h3 className="font-display text-lg font-semibold">Available Routes</h3>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h3 className="font-display text-lg font-semibold">Available Routes</h3>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground label-caps">Sort by</Label>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as "price" | "departure")}>
+                    <SelectTrigger className="w-[200px] h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="departure">Departure Time</SelectItem>
+                      <SelectItem value="price">Price (Low to High)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               {filteredRoutes.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No active routes found. Try different filters.</p>
               ) : (
