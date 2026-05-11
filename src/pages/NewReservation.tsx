@@ -291,16 +291,9 @@ const NewReservation = () => {
 
     const stubSeat = selectedSeats[0] || "—";
 
-    // Real QR code as data URL
-    const qrPayload = JSON.stringify({
-      booking: bookingId,
-      train: selectedRoute.train_id,
-      from: selectedRoute.source,
-      to: selectedRoute.destination,
-      date: format(travelDate, "yyyy-MM-dd"),
-      seats: selectedSeats,
-    });
-    const qrDataUrl = await QRCode.toDataURL(qrPayload, {
+    // QR encodes a public URL to the ticket page
+    const ticketUrl = `${window.location.origin}/ticket/${bookingId}`;
+    const qrDataUrl = await QRCode.toDataURL(ticketUrl, {
       errorCorrectionLevel: "M",
       margin: 1,
       width: 220,
