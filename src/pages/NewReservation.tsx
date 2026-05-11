@@ -291,13 +291,12 @@ const NewReservation = () => {
 
     const stubSeat = selectedSeats[0] || "—";
 
-    // QR encodes a public URL to the ticket page
-    const ticketUrl = `${window.location.origin}/ticket/${bookingId}`;
-    const qrDataUrl = await QRCode.toDataURL(ticketUrl, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 220,
-      color: { dark: "#0B1F17", light: "#F4E9B8" },
+    // Barcode encodes the booking ID (scan-friendly at the gate)
+    const barcodeDataUrl = generateBarcodeDataUrl(bookingId, {
+      dark: "#0B1F17",
+      light: "#F4E9B8",
+      height: 80,
+      width: 2,
     });
 
     const printWindow = window.open("", "_blank");
