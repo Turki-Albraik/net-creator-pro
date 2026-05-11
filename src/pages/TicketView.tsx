@@ -51,13 +51,13 @@ const TicketView = () => {
       const merged: TicketData = { ...(r as any), ...(route as any) };
       setTicket(merged);
 
-      const qrUrl = await QRCode.toDataURL(window.location.href, {
-        errorCorrectionLevel: "M",
-        margin: 1,
-        width: 320,
-        color: { dark: "#0B1F17", light: "#F4E9B8" },
+      const barcode = generateBarcodeDataUrl((r as any).booking_id, {
+        dark: "#0B1F17",
+        light: "#F4E9B8",
+        height: 90,
+        width: 2.4,
       });
-      setQr(qrUrl);
+      setQr(barcode);
       setLoading(false);
     };
     load();
