@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import QRCode from "qrcode";
 import {
   ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
   Printer, CheckCircle2, Download,
