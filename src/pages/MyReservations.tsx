@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, XCircle, ArrowLeftRight, Ticket } from "lucide-react";
-import QRCode from "qrcode";
+import { generateBarcodeDataUrl } from "@/lib/barcode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
@@ -191,15 +191,14 @@ const MyReservations = () => {
     fetchReservations();
   };
 
-  const openPresentTicket = async (res: Reservation) => {
-    const ticketUrl = `${window.location.origin}/ticket/${res.booking_id}`;
-    const qr = await QRCode.toDataURL(ticketUrl, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 320,
-      color: { dark: "#0B1F17", light: "#F4E9B8" },
+  const openPresentTicket = (res: Reservation) => {
+    const barcode = generateBarcodeDataUrl(res.booking_id, {
+      dark: "#0B1F17",
+      light: "#F4E9B8",
+      height: 90,
+      width: 2.4,
     });
-    setPresentQr(qr);
+    setPresentQr(barcode);
     setPresentRes(res);
     setPresentOpen(true);
   };
@@ -345,7 +344,7 @@ const MyReservations = () => {
                   </div>
                   <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
                     {presentQr && (
-                      <img src={presentQr} alt="QR" className="w-48 h-48 rounded-lg" style={{ background: "#F4E9B8", padding: 6 }} />
+                      <img src={presentQr} alt="Barcode" className="rounded-lg max-w-[260px] w-full" style={{ background: "#F4E9B8", padding: 6 }} />
                     )}
                     <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
                       {presentRes.booking_id}

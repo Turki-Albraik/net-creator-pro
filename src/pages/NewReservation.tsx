@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import QRCode from "qrcode";
+import { generateBarcodeDataUrl } from "@/lib/barcode";
 import {
   ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
   Printer, CheckCircle2, Download,
@@ -291,13 +291,12 @@ const NewReservation = () => {
 
     const stubSeat = selectedSeats[0] || "—";
 
-    // QR encodes a public URL to the ticket page
-    const ticketUrl = `${window.location.origin}/ticket/${bookingId}`;
-    const qrDataUrl = await QRCode.toDataURL(ticketUrl, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 220,
-      color: { dark: "#0B1F17", light: "#F4E9B8" },
+    // Barcode encodes the booking ID (scan-friendly at the gate)
+    const barcodeDataUrl = generateBarcodeDataUrl(bookingId, {
+      dark: "#0B1F17",
+      light: "#F4E9B8",
+      height: 80,
+      width: 2,
     });
 
     const printWindow = window.open("", "_blank");
@@ -342,8 +341,8 @@ const NewReservation = () => {
         .seats { margin-top: 18px; padding:10px 14px; border:1px solid rgba(181,148,16,0.5); border-radius:10px; font-family: monospace; letter-spacing:2px; color:#F4E9B8; text-align:center; font-weight:700; }
         .stub .stub-label { font-size:9px; letter-spacing:3px; color:#D4B53A; text-transform:uppercase; }
         .stub .seat { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; color:#F4E9B8; margin: 6px 0 4px; }
-        .stub .qr { width:140px; height:140px; margin: 12px auto 6px; padding:6px; background:#F4E9B8; border-radius:8px; display:block; }
-        .stub .qr img { width:100%; height:100%; display:block; }
+        .stub .qr { margin: 12px auto 6px; padding:6px 8px; background:#F4E9B8; border-radius:8px; display:flex; justify-content:center; }
+        .stub .qr img { max-width:160px; height:auto; display:block; }
         .stub .bk { font-family: monospace; font-size:10px; color:#0B1F17; background:#F4E9B8; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:1px; }
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
@@ -373,7 +372,7 @@ const NewReservation = () => {
         <div class="stub">
           <div class="stub-label">Boarding Pass</div>
           <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qrDataUrl}" alt="QR" /></div>
+          <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
           <div class="bk">${bookingId}</div>
         </div>
       </div>

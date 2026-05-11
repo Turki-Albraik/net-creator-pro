@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import QRCode from "qrcode";
+import { generateBarcodeDataUrl } from "@/lib/barcode";
 
 interface TicketData {
   booking_id: string;
@@ -51,13 +51,13 @@ const TicketView = () => {
       const merged: TicketData = { ...(r as any), ...(route as any) };
       setTicket(merged);
 
-      const qrUrl = await QRCode.toDataURL(window.location.href, {
-        errorCorrectionLevel: "M",
-        margin: 1,
-        width: 320,
-        color: { dark: "#0B1F17", light: "#F4E9B8" },
+      const barcode = generateBarcodeDataUrl((r as any).booking_id, {
+        dark: "#0B1F17",
+        light: "#F4E9B8",
+        height: 90,
+        width: 2.4,
       });
-      setQr(qrUrl);
+      setQr(barcode);
       setLoading(false);
     };
     load();
@@ -101,8 +101,8 @@ const TicketView = () => {
           font-family: monospace; letter-spacing:2px; color:#F4E9B8; text-align:center; font-weight:700; }
         .stub-label { font-size:9px; letter-spacing:3px; color:#D4B53A; text-transform:uppercase; }
         .seat { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; color:#F4E9B8; margin: 6px 0 4px; }
-        .qr { width:140px; height:140px; margin: 12px auto 6px; padding:6px; background:#F4E9B8; border-radius:8px; }
-        .qr img { width:100%; height:100%; display:block; }
+        .qr { margin: 12px auto 6px; padding:6px 8px; background:#F4E9B8; border-radius:8px; display:flex; justify-content:center; }
+        .qr img { max-width:160px; height:auto; display:block; }
         .bk { font-family: monospace; font-size:10px; color:#0B1F17; background:#F4E9B8; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
@@ -126,7 +126,7 @@ const TicketView = () => {
         <div class="stub">
           <div class="stub-label">Boarding Pass</div>
           <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qr}" alt="QR" /></div>
+          <div class="qr"><img src="${qr}" alt="Barcode" /></div>
           <div class="bk">${ticket.booking_id}</div>
         </div>
       </div>
@@ -227,7 +227,7 @@ const TicketView = () => {
                 {ticket.seat_numbers?.[0] || "—"}
               </p>
               {qr && (
-                <img src={qr} alt="QR" className="w-36 h-36 rounded-lg p-1.5" style={{ background: "#F4E9B8" }} />
+                <img src={qr} alt="Barcode" className="rounded-lg max-w-[200px] w-full p-1.5" style={{ background: "#F4E9B8" }} />
               )}
               <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
                 {ticket.booking_id}
