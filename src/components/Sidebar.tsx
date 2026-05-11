@@ -122,18 +122,10 @@ const Sidebar = () => {
       )}
       <button
         onClick={handleLogout}
-        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl text-[#8FA99A] hover:bg-forest-900 hover:text-white transition-colors"
-      >
-        <LogOut className="h-4 w-4 shrink-0" />
-        <span
-          className={cn(
-            "text-sm font-medium whitespace-nowrap transition-all",
-            expanded ? "opacity-100" : "opacity-0 w-0"
-          )}
-        >
-          Sign Out
-        </span>
-      </button>
+        title="Sign Out"
+        className="hidden"
+        aria-hidden
+      />
     </div>
   );
 
