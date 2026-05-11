@@ -162,6 +162,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setEmployee(null);
     localStorage.removeItem("railsync_employee");
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.auth.signOut().catch(() => {});
+    });
   };
 
   return (
