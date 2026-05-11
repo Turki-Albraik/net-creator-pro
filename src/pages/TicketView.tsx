@@ -126,7 +126,7 @@ const TicketView = () => {
         <div class="stub">
           <div class="stub-label">Boarding Pass</div>
           <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qr}" alt="QR" /></div>
+          <div class="qr"><img src="${qr}" alt="Barcode" /></div>
           <div class="bk">${ticket.booking_id}</div>
         </div>
       </div>
