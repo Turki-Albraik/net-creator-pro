@@ -303,15 +303,65 @@ const MyReservations = () => {
         </div>
 
         <Dialog open={seatDialogOpen} onOpenChange={setSeatDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Reallocate Seats</DialogTitle></DialogHeader>
-            <p className="text-sm text-muted-foreground mb-4">
-              Select {selectedRes?.num_tickets} seat(s). Current: {selectedRes?.seat_numbers?.join(", ")}
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Reallocate Seats</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground mb-2">
+              Select {selectedRes?.num_tickets} seat(s). Current: <span className="font-mono text-foreground">{selectedRes?.seat_numbers?.join(", ")}</span>
             </p>
             {renderSeatGrid()}
             <Button onClick={handleSaveSeatChange} disabled={newSeats.length !== (selectedRes?.num_tickets || 0)} className="w-full mt-4">
               Save Seat Changes
             </Button>
+          </DialogContent>
+        </Dialog>
+
+        {/* Present Ticket Dialog */}
+        <Dialog open={presentOpen} onOpenChange={setPresentOpen}>
+          <DialogContent className="max-w-md p-0 overflow-hidden border-amber-brand/40">
+            <div className="relative p-6" style={{ background: "radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%)", color: "#FDFCF5" }}>
+              <DialogHeader>
+                <DialogTitle className="font-display text-2xl" style={{ color: "#F4E9B8" }}>
+                  Boarding Pass
+                </DialogTitle>
+              </DialogHeader>
+              {presentRes && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Route</p>
+                    <p className="font-display text-2xl mt-1">{presentRes.source} → {presentRes.destination}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Train</p>
+                      <p className="font-semibold">{presentRes.train_id}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Date</p>
+                      <p className="font-semibold">{presentRes.travel_date}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Seats</p>
+                      <p className="font-mono font-semibold">{presentRes.seat_numbers?.join(", ")}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Passenger</p>
+                      <p className="font-semibold truncate">{presentRes.passenger_name.split(",")[0]}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
+                    {presentQr && (
+                      <img src={presentQr} alt="QR" className="w-48 h-48 rounded-lg" style={{ background: "#F4E9B8", padding: 6 }} />
+                    )}
+                    <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
+                      {presentRes.booking_id}
+                    </p>
+                    <p className="text-[10px] mt-3 tracking-widest uppercase opacity-70">Show this code at the gate</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
