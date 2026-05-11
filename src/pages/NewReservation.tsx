@@ -291,8 +291,15 @@ const NewReservation = () => {
     `).join("");
 
     const stubSeat = selectedSeats[0] || "—";
-    const qrCells = Array.from({ length: 169 })
-      .map((_, i) => `<span style="background:${(i * 7 + (i % 11)) % 3 === 0 ? '#0F1E14' : 'transparent'}"></span>`)
+    // Deterministic barcode: alternating bars of varying widths
+    const barSeed = bookingId.replace(/[^A-Z0-9]/gi, "");
+    const barcodeBars = Array.from({ length: 48 })
+      .map((_, i) => {
+        const ch = barSeed.charCodeAt(i % barSeed.length) || 65;
+        const w = ((ch + i) % 3) + 1; // 1-3 px wide
+        const dark = ((ch + i) % 2) === 0;
+        return `<span style="width:${w}px;background:${dark ? '#0B1F17' : 'transparent'}"></span>`;
+      })
       .join("");
 
     printWindow.document.write(`
