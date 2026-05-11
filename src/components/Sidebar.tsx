@@ -1,4 +1,4 @@
-import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History, X } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +26,8 @@ const passengerNavItems = [
 const Sidebar = () => {
   const { employee, logout } = useAuth();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -35,83 +36,154 @@ const Sidebar = () => {
 
   const isPassenger = employee?.role === "Passenger";
   const navItems = isPassenger ? passengerNavItems : adminNavItems;
+  const userInitials = (employee?.name || "U")
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const NavList = ({ expanded, onNavigate }: { expanded: boolean; onNavigate?: () => void }) => (
+    <nav className="flex-1 px-2 py-4 space-y-1">
+      {navItems.map((item) => (
+        <RouterNavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === "/"}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 rounded-xl px-2.5 py-3 transition-all duration-200 group relative",
+              isActive
+                ? "bg-forest-800 text-white border border-forest-700"
+                : "text-[#8FA99A] hover:bg-forest-900 hover:text-white"
+            )
+          }
+        >
+          <item.icon className="h-5 w-5 shrink-0" />
+          <span
+            className={cn(
+              "whitespace-nowrap text-sm font-medium transition-all duration-200",
+              expanded ? "opacity-100 ml-0" : "opacity-0 -ml-2 w-0 overflow-hidden"
+            )}
+          >
+            {item.label}
+          </span>
+          {!expanded && (
+            <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-forest-950 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg z-50">
+              {item.label}
+            </span>
+          )}
+        </RouterNavLink>
+      ))}
+    </nav>
+  );
+
+  const LogoRow = ({ expanded, withClose }: { expanded: boolean; withClose?: boolean }) => (
+    <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800">
+      <img src={logoImg} alt="سِـكَّـة" className="h-10 w-10 rounded-lg object-cover shrink-0" />
+      <div
+        className={cn(
+          "flex-1 transition-all duration-200 overflow-hidden",
+          expanded ? "opacity-100" : "opacity-0 w-0"
+        )}
+      >
+        <h1 className="font-serif text-lg text-white leading-tight">سِـكَّـة</h1>
+        <p className="text-[10px] text-[#8FA99A] uppercase tracking-widest">Sikkah</p>
+      </div>
+      {withClose && (
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="text-white/70 hover:text-white p-1 rounded-lg"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+
+  const UserCard = ({ expanded }: { expanded: boolean }) => (
+    <div className="px-3 pb-4 space-y-2">
+      {employee && (
+        <div className="flex items-center gap-3 p-2 rounded-xl bg-forest-900 border border-forest-800">
+          <div className="h-9 w-9 rounded-full bg-amber-brand text-forest-950 flex items-center justify-center font-bold text-sm shrink-0">
+            {userInitials}
+          </div>
+          <div
+            className={cn(
+              "flex-1 min-w-0 transition-all duration-200 overflow-hidden",
+              expanded ? "opacity-100" : "opacity-0 w-0"
+            )}
+          >
+            <p className="text-xs font-semibold text-white truncate">{employee.name}</p>
+            <p className="text-[10px] text-[#8FA99A] uppercase tracking-wider truncate">{employee.role}</p>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl text-[#8FA99A] hover:bg-forest-900 hover:text-white transition-colors"
+      >
+        <LogOut className="h-4 w-4 shrink-0" />
+        <span
+          className={cn(
+            "text-sm font-medium whitespace-nowrap transition-all",
+            expanded ? "opacity-100" : "opacity-0 w-0"
+          )}
+        >
+          Sign Out
+        </span>
+      </button>
+    </div>
+  );
 
   return (
     <>
-      {!isOpen && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 z-50 bg-card border border-border shadow-sm"
+      {/* MOBILE HEADER */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-forest-950 border-b border-forest-800 flex items-center justify-between px-4">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="w-9 h-9 rounded-lg bg-forest-900 flex items-center justify-center text-white"
+          aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
-        </Button>
-      )}
-
-      <aside className={cn(
-        "fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="flex items-center justify-between px-6 py-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <img src={logoImg} alt="سِـكَّـة logo" className="h-10 w-10 rounded-lg object-cover" />
-            <div>
-              <h1 className="font-display text-lg font-bold text-sidebar-foreground">سِـكَّـة</h1>
-              <p className="text-xs text-sidebar-foreground/60">Management System</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(false)}
-            className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-8 w-8"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
+        </button>
+        <div className="flex items-center gap-2">
+          <img src={logoImg} alt="" className="h-7 w-7 rounded-md object-cover" />
+          <span className="font-serif text-white text-base">سِـكَّـة</span>
         </div>
+        <div className="w-9" />
+      </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => (
-            <RouterNavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                )
-              }
-            >
-              <item.icon className="h-4.5 w-4.5" />
-              {item.label}
-            </RouterNavLink>
-          ))}
-        </nav>
-
-        {employee && (
-          <div className="p-4 mx-3 mb-2 rounded-lg bg-sidebar-accent/50 border border-sidebar-border">
-            <p className="text-xs font-medium text-sidebar-foreground/80">{employee.name}</p>
-            <p className="text-xs text-sidebar-foreground/60 capitalize">Role: {employee.role}</p>
-          </div>
+      {/* DESKTOP SIDEBAR — hover expand */}
+      <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 bg-forest-950 border-r border-forest-800",
+          "transition-all duration-300 ease-in-out overflow-hidden",
+          isHovered ? "w-[260px] shadow-2xl" : "w-16"
         )}
-
-        <div className="px-3 mb-4">
-          <Button variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" /> Sign Out
-          </Button>
-        </div>
-
-        <div className="p-4 mx-3 mb-4 rounded-lg bg-sidebar-accent/50 border border-sidebar-border">
-          <p className="text-xs font-medium text-sidebar-foreground/80">System Status</p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="h-2 w-2 rounded-full bg-train-signal animate-pulse" />
-            <span className="text-xs text-sidebar-foreground/60">All systems operational</span>
-          </div>
-        </div>
+      >
+        <LogoRow expanded={isHovered} />
+        <NavList expanded={isHovered} />
+        <UserCard expanded={isHovered} />
       </aside>
+
+      {/* MOBILE DRAWER */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 animate-fade-in">
+          <div
+            className="absolute inset-0 bg-forest-950/70 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="relative w-[280px] h-full bg-forest-950 border-r border-forest-800 flex flex-col animate-slide-in">
+            <LogoRow expanded withClose />
+            <NavList expanded onNavigate={() => setMobileOpen(false)} />
+            <UserCard expanded />
+          </aside>
+        </div>
+      )}
     </>
   );
 };
