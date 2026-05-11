@@ -344,7 +344,7 @@ const MyReservations = () => {
                   </div>
                   <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
                     {presentQr && (
-                      <img src={presentQr} alt="QR" className="w-48 h-48 rounded-lg" style={{ background: "#F4E9B8", padding: 6 }} />
+                      <img src={presentQr} alt="Barcode" className="rounded-lg max-w-[260px] w-full" style={{ background: "#F4E9B8", padding: 6 }} />
                     )}
                     <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
                       {presentRes.booking_id}
