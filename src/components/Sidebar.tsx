@@ -103,12 +103,15 @@ const Sidebar = () => {
   );
 
   const UserCard = ({ expanded }: { expanded: boolean }) => (
-    <div className="px-3 pb-4">
+    <div className={cn("pb-4", expanded ? "px-3" : "px-2")}>
       {employee && (
         <button
           onClick={handleLogout}
           title="Sign Out"
-          className="w-full flex items-center gap-3 p-2 rounded-xl bg-forest-900 dark:bg-navy-900 border border-forest-800 dark:border-navy-800 hover:border-amber-brand/60 transition-colors group"
+          className={cn(
+            "w-full flex items-center rounded-xl bg-forest-900 dark:bg-navy-900 border border-forest-800 dark:border-navy-800 hover:border-amber-brand/60 transition-colors group",
+            expanded ? "gap-3 p-2" : "justify-center p-1.5"
+          )}
         >
           <div className="h-9 w-9 rounded-full bg-amber-brand text-forest-950 flex items-center justify-center font-bold text-sm shrink-0">
             {userInitials}
