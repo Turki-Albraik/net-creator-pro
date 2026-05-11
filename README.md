@@ -98,33 +98,7 @@ npm run dev
 
 ---
 
-## Available Scripts
 
-Run the development server:
-
-```bash
-npm run dev
-```
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-Preview the production build:
-
-```bash
-npm run preview
-```
-
-Run lint checks:
-
-```bash
-npm run lint
-```
-
----
 
 ## Development Philosophy
 
@@ -172,31 +146,11 @@ Sikkah can be deployed on:
 - Cloudflare Pages
 - Lovable Hosting
 
-Example deployment using Vercel:
 
-```bash
-npm install -g vercel
-vercel
-```
 
 ---
 
-## Contributing
 
-Contributions are welcome.
-
-### Contribution Process
-
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes
-4. Commit your work
-5. Push your branch
-6. Open a pull request
-
-Please ensure that your code follows clean coding practices and project conventions.
-
----
 
 ## Code Standards
 
