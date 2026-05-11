@@ -12,10 +12,10 @@ interface StatCardProps {
 const StatCard = ({ title, value, change, changeType = "neutral", icon: Icon }: StatCardProps) => {
   return (
     <div className="rounded-xl border border-border bg-card p-5 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="font-display text-3xl font-bold text-card-foreground mt-2">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
+          <p className="font-display text-2xl sm:text-3xl font-bold text-card-foreground mt-2 break-words">{value}</p>
           {change && (
             <p
               className={cn(
@@ -29,7 +29,7 @@ const StatCard = ({ title, value, change, changeType = "neutral", icon: Icon }: 
             </p>
           )}
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted shrink-0">
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
