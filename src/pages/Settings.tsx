@@ -1,11 +1,20 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Moon, Sun, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Settings = () => {
+  const { employee, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
   const [darkMode, setDarkMode] = useState(() => {
     return document.documentElement.classList.contains("dark");
   });
