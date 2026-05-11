@@ -342,8 +342,8 @@ const NewReservation = () => {
         .stub .stub-label { font-size:9px; letter-spacing:3px; color:#D4B53A; text-transform:uppercase; }
         .stub .seat { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; color:#F4E9B8; margin: 6px 0 4px; }
         .stub .coach { font-size:11px; color:#fff; letter-spacing:1px; }
-        .qr { width:130px; height:130px; margin: 14px auto 6px; padding:8px; background:#F4E9B8; border-radius:8px; display:grid; grid-template-columns: repeat(13, 1fr); gap:1px; }
-        .qr span { display:block; width:100%; aspect-ratio:1/1; }
+        .qr { width:160px; height:54px; margin: 14px auto 6px; padding:6px 8px; background:#F4E9B8; border-radius:6px; display:flex; align-items:stretch; justify-content:center; gap:1px; }
+        .qr span { display:block; height:100%; }
         .stub .bk { font-family: monospace; font-size:10px; color:#0B1F17; background:#F4E9B8; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:1px; }
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
@@ -354,7 +354,7 @@ const NewReservation = () => {
         <div class="main">
           <div class="brand">
             <h1>سِـكَّـة</h1>
-            <small>Sikkah · Heritage Rail</small>
+            <small>Sikkah</small>
           </div>
           <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
           <div class="grid">
@@ -366,15 +366,14 @@ const NewReservation = () => {
           <div style="margin-top:14px">${passengersHtml}</div>
           <div class="seats">SEATS · ${selectedSeats.join("  ·  ")}</div>
           <div class="total">
-            <span class="lbl">Total Fare</span>
+            <span class="lbl">Total Price</span>
             <span class="amt">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span>
           </div>
         </div>
         <div class="stub">
-          <div class="stub-label">Boarding Stub</div>
+          <div class="stub-label">Boarding Pass</div>
           <div class="seat">${stubSeat}</div>
-          <div class="coach">COACH A</div>
-          <div class="qr">${qrCells}</div>
+          <div class="qr">${barcodeBars}</div>
           <div class="bk">${bookingId}</div>
         </div>
       </div>
