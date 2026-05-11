@@ -69,6 +69,9 @@ const NewReservation = () => {
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdRafRef = useRef<number | null>(null);
 
   const [sourceFilter, setSourceFilter] = useState("");
   const [destFilter, setDestFilter] = useState("");
