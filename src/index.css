@@ -79,13 +79,13 @@
     --input:             217 33% 22%;
     --ring:              45 84% 50%;
 
-    --sidebar-background:        222 47% 8%;
+    --sidebar-background:        222 60% 10%;
     --sidebar-foreground:        210 40% 92%;
     --sidebar-primary:           45 84% 50%;
-    --sidebar-primary-foreground:222 47% 11%;
-    --sidebar-accent:            217 33% 18%;
+    --sidebar-primary-foreground:222 60% 10%;
+    --sidebar-accent:            222 50% 18%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border:            45 50% 30%;
+    --sidebar-border:            222 45% 22%;
     --sidebar-ring:              45 84% 50%;
   }
 
