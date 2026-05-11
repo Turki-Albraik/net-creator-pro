@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, XCircle, ArrowLeftRight } from "lucide-react";
+import { Plus, XCircle, ArrowLeftRight, Ticket } from "lucide-react";
+import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
@@ -49,6 +50,9 @@ const MyReservations = () => {
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [newSeats, setNewSeats] = useState<string[]>([]);
   const [routeInfo, setRouteInfo] = useState<TrainRoute | null>(null);
+  const [presentOpen, setPresentOpen] = useState(false);
+  const [presentRes, setPresentRes] = useState<Reservation | null>(null);
+  const [presentQr, setPresentQr] = useState<string>("");
 
   // Bug #4 — Use booked_by instead of name matching
   const fetchReservations = async () => {
@@ -187,6 +191,26 @@ const MyReservations = () => {
     fetchReservations();
   };
 
+  const openPresentTicket = async (res: Reservation) => {
+    const payload = JSON.stringify({
+      booking: res.booking_id,
+      train: res.train_id,
+      from: res.source,
+      to: res.destination,
+      date: res.travel_date,
+      seats: res.seat_numbers,
+    });
+    const qr = await QRCode.toDataURL(payload, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 320,
+      color: { dark: "#0B1F17", light: "#F4E9B8" },
+    });
+    setPresentQr(qr);
+    setPresentRes(res);
+    setPresentOpen(true);
+  };
+
   const renderSeatGrid = () => {
     if (!routeInfo) return null;
     const totalSeats = routeInfo.total_seats;
@@ -201,40 +225,64 @@ const MyReservations = () => {
     }
 
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-muted border border-border" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-primary" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-destructive/30" /> Booked</span>
+      <div className="space-y-4 animate-heritage-in">
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="label-caps text-muted-foreground mr-2">Availability</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-available !h-4 !w-6 !rounded" /> Available</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-selected !h-4 !w-6 !rounded" /> Selected</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-booked !h-4 !w-6 !rounded" /> Booked</span>
         </div>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr auto 1fr 1fr" }}>
-          {Array.from({ length: rows }).map((_, rowIdx) => {
-            const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-            const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-            return [
-              ...left.map((seat) => (
-                <button key={seat} onClick={() => toggleSeat(seat)} disabled={bookedSeats.includes(seat)}
-                  className={cn("h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat) ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                    : newSeats.includes(seat) ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                    : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}>
-                  {seat}
-                </button>
-              )),
-              <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-muted-foreground/30 text-xs">│</div>,
-              ...right.map((seat) => (
-                <button key={seat} onClick={() => toggleSeat(seat)} disabled={bookedSeats.includes(seat)}
-                  className={cn("h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat) ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                    : newSeats.includes(seat) ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                    : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}>
-                  {seat}
-                </button>
-              )),
-            ];
-          })}
+
+        <div className="carriage rounded-3xl p-4 md:p-6 relative overflow-hidden">
+          <div className="flex gap-3 md:gap-5 items-stretch">
+            {/* Left windows */}
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+              {Array.from({ length: rows }).map((_, i) => (
+                <div key={`lw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+              ))}
+            </div>
+
+            <div className="flex-1 grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 36px 1fr 1fr" }}>
+              {Array.from({ length: rows }).map((_, rowIdx) => {
+                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
+                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
+                const renderSeat = (seat: string | undefined) => {
+                  if (!seat) return <div key={Math.random()} />;
+                  const isBooked = bookedSeats.includes(seat);
+                  const isSelected = newSeats.includes(seat);
+                  return (
+                    <button
+                      key={seat}
+                      onClick={() => toggleSeat(seat)}
+                      disabled={isBooked}
+                      className={cn(
+                        "seat-btn",
+                        isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                      )}
+                    >
+                      <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                    </button>
+                  );
+                };
+                return (
+                  <div key={`row-${rowIdx}`} className="contents">
+                    {left.map(renderSeat)}
+                    <div className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
+                      {rowIdx + 1}
+                    </div>
+                    {right.map(renderSeat)}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right windows */}
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+              {Array.from({ length: rows }).map((_, i) => (
+                <div key={`rw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -255,15 +303,65 @@ const MyReservations = () => {
         </div>
 
         <Dialog open={seatDialogOpen} onOpenChange={setSeatDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Reallocate Seats</DialogTitle></DialogHeader>
-            <p className="text-sm text-muted-foreground mb-4">
-              Select {selectedRes?.num_tickets} seat(s). Current: {selectedRes?.seat_numbers?.join(", ")}
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Reallocate Seats</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground mb-2">
+              Select {selectedRes?.num_tickets} seat(s). Current: <span className="font-mono text-foreground">{selectedRes?.seat_numbers?.join(", ")}</span>
             </p>
             {renderSeatGrid()}
             <Button onClick={handleSaveSeatChange} disabled={newSeats.length !== (selectedRes?.num_tickets || 0)} className="w-full mt-4">
               Save Seat Changes
             </Button>
+          </DialogContent>
+        </Dialog>
+
+        {/* Present Ticket Dialog */}
+        <Dialog open={presentOpen} onOpenChange={setPresentOpen}>
+          <DialogContent className="max-w-md p-0 overflow-hidden border-amber-brand/40">
+            <div className="relative p-6" style={{ background: "radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%)", color: "#FDFCF5" }}>
+              <DialogHeader>
+                <DialogTitle className="font-display text-2xl" style={{ color: "#F4E9B8" }}>
+                  Boarding Pass
+                </DialogTitle>
+              </DialogHeader>
+              {presentRes && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Route</p>
+                    <p className="font-display text-2xl mt-1">{presentRes.source} → {presentRes.destination}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Train</p>
+                      <p className="font-semibold">{presentRes.train_id}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Date</p>
+                      <p className="font-semibold">{presentRes.travel_date}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Seats</p>
+                      <p className="font-mono font-semibold">{presentRes.seat_numbers?.join(", ")}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Passenger</p>
+                      <p className="font-semibold truncate">{presentRes.passenger_name.split(",")[0]}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
+                    {presentQr && (
+                      <img src={presentQr} alt="QR" className="w-48 h-48 rounded-lg" style={{ background: "#F4E9B8", padding: 6 }} />
+                    )}
+                    <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
+                      {presentRes.booking_id}
+                    </p>
+                    <p className="text-[10px] mt-3 tracking-widest uppercase opacity-70">Show this code at the gate</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -293,6 +391,9 @@ const MyReservations = () => {
                     <div className="flex gap-1">
                       {r.status === "Confirmed" && (
                         <>
+                          <Button variant="ghost" size="icon" title="Present ticket" onClick={() => openPresentTicket(r)}>
+                            <Ticket className="h-4 w-4 text-primary" />
+                          </Button>
                           <Button variant="ghost" size="icon" title="Reallocate seats" onClick={() => openSeatReallocation(r)}>
                             <ArrowLeftRight className="h-4 w-4" />
                           </Button>
