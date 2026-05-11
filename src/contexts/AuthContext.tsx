@@ -40,6 +40,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem("railsync_employee");
       }
     }
+
+    // Handle Google OAuth session -> map to passenger row
+    (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const handleSession = async (session: any) => {
+        if (!session?.user?.email) return;
+        const user = session.user;
+        const email = user.email as string;
+        const fullName =
+          (user.user_metadata?.full_name as string) ||
+          (user.user_metadata?.name as string) ||
+          email.split("@")[0];
+
+        // Find or create passenger
+        let { data: pData } = await supabase
+          .from("passengers")
+          .select("id, name")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (!pData) {
+          const { data: inserted } = await supabase
+            .from("passengers")
+            .insert({
+              name: fullName,
+              email,
+              trips: 0,
+              total_spent: 0,
+            } as any)
+            .select("id, name")
+            .single();
+          pData = inserted as any;
+        }
+
+        if (!pData) return;
+
+        const emp: Employee = {
+          id: (pData as any).id,
+          employee_id: `P-${(pData as any).id.slice(0, 8).toUpperCase()}`,
+          name: (pData as any).name,
+          role: "Passenger",
+        };
+        setEmployee(emp);
+        localStorage.setItem("railsync_employee", JSON.stringify(emp));
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !localStorage.getItem("railsync_employee")) {
+        await handleSession(session);
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          handleSession(session);
+        }
+      });
+    })();
   }, []);
 
   const login = async (identifier: string, password: string): Promise<boolean> => {
@@ -105,6 +162,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setEmployee(null);
     localStorage.removeItem("railsync_employee");
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.auth.signOut().catch(() => {});
+    });
   };
 
   return (
