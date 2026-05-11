@@ -372,7 +372,7 @@ const NewReservation = () => {
         <div class="stub">
           <div class="stub-label">Boarding Pass</div>
           <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qrDataUrl}" alt="QR" /></div>
+          <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
           <div class="bk">${bookingId}</div>
         </div>
       </div>
