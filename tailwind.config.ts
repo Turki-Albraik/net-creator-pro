@@ -14,8 +14,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        display: ['Space Grotesk', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        inter: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Playfair Display', 'Georgia', 'serif'],
+        playfair: ['Playfair Display', 'Georgia', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -67,6 +70,22 @@ export default {
           signal: "hsl(var(--train-signal))",
           warning: "hsl(var(--train-warning))",
         },
+        rail: {
+          gold: "hsl(var(--rail-gold))",
+          "gold-bright": "hsl(var(--rail-gold-bright))",
+          "gold-deep": "hsl(var(--rail-gold-deep))",
+          success: "hsl(var(--rail-success))",
+          claret: "hsl(var(--rail-claret))",
+          steel: "hsl(var(--rail-steel-blue))",
+          surface: "hsl(var(--rail-surface))",
+          "surface-2": "hsl(var(--rail-surface-2))",
+          "text-muted": "hsl(var(--rail-text-muted))",
+        },
+      },
+      boxShadow: {
+        rail: "0 4px 24px rgba(0,0,0,0.4)",
+        "rail-gold": "0 0 14px rgba(201,168,76,0.5)",
+        "rail-gold-soft": "0 0 8px rgba(201,168,76,0.2)",
       },
       borderRadius: {
         lg: "var(--radius)",
