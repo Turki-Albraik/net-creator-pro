@@ -56,6 +56,26 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="font-display text-lg">Account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label className="text-base">Sign Out</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {employee ? `Signed in as ${employee.name}` : "End your current session"}
+                  </p>
+                </div>
+                <Button variant="destructive" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
