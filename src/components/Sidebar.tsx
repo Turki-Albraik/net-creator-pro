@@ -13,15 +13,15 @@ const adminNavItems = [
   { icon: Users, label: "Passengers", to: "/passengers" },
   { icon: UserCog, label: "Employees", to: "/employees" },
   { icon: BarChart3, label: "Reports", to: "/reports" },
-  { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 const passengerNavItems = [
   { icon: TicketCheck, label: "New Reservation", to: "/reservations/new" },
   { icon: History, label: "My Reservations", to: "/my-reservations" },
   { icon: User, label: "My Profile", to: "/my-profile" },
-  { icon: Settings, label: "Settings", to: "/settings" },
 ];
+
+const settingsItem = { icon: Settings, label: "Settings", to: "/settings" };
 
 const Sidebar = () => {
   const { employee, logout } = useAuth();
@@ -43,41 +43,50 @@ const Sidebar = () => {
     .join("")
     .toUpperCase();
 
-  const NavList = ({ expanded, onNavigate }: { expanded: boolean; onNavigate?: () => void }) => (
-    <nav className="flex-1 px-2 py-4 space-y-1">
-      {navItems.map((item) => (
-        <RouterNavLink
-          key={item.to}
-          to={item.to}
-          end={item.to === "/"}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 rounded-xl px-2.5 py-3 transition-all duration-200 group relative",
-              isActive
-                ? "bg-forest-800 dark:bg-navy-800 text-white border border-forest-700 dark:border-navy-700"
-                : "text-[#8FA99A] hover:bg-forest-900 dark:hover:bg-navy-900 hover:text-white"
-            )
-          }
+  const NavList = ({ expanded, onNavigate }: { expanded: boolean; onNavigate?: () => void }) => {
+    const renderItem = (item: { icon: typeof Settings; label: string; to: string }) => (
+      <RouterNavLink
+        key={item.to}
+        to={item.to}
+        end={item.to === "/"}
+        onClick={onNavigate}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 rounded-xl px-2.5 py-3 transition-all duration-200 group relative",
+            isActive
+              ? "bg-forest-800 dark:bg-navy-800 text-white border border-forest-700 dark:border-navy-700"
+              : "text-[#8FA99A] hover:bg-forest-900 dark:hover:bg-navy-900 hover:text-white"
+          )
+        }
+      >
+        <item.icon className="h-5 w-5 shrink-0" />
+        <span
+          className={cn(
+            "whitespace-nowrap text-sm font-medium transition-all duration-200",
+            expanded ? "opacity-100 ml-0" : "opacity-0 -ml-2 w-0 overflow-hidden"
+          )}
         >
-          <item.icon className="h-5 w-5 shrink-0" />
-          <span
-            className={cn(
-              "whitespace-nowrap text-sm font-medium transition-all duration-200",
-              expanded ? "opacity-100 ml-0" : "opacity-0 -ml-2 w-0 overflow-hidden"
-            )}
-          >
+          {item.label}
+        </span>
+        {!expanded && (
+          <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-forest-950 dark:bg-navy-950 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg z-50">
             {item.label}
           </span>
-          {!expanded && (
-            <span className="absolute left-full ml-3 px-2 py-1 rounded-md bg-forest-950 dark:bg-navy-950 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg z-50">
-              {item.label}
-            </span>
-          )}
-        </RouterNavLink>
-      ))}
-    </nav>
-  );
+        )}
+      </RouterNavLink>
+    );
+
+    return (
+      <>
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          {navItems.map(renderItem)}
+        </nav>
+        <div className="px-2 pb-4 pt-2 border-t border-forest-800 dark:border-navy-800 space-y-1">
+          {renderItem(settingsItem)}
+        </div>
+      </>
+    );
+  };
 
   const LogoRow = ({ expanded, withClose }: { expanded: boolean; withClose?: boolean }) => (
     <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800 dark:border-navy-800">
