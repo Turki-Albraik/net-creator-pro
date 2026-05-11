@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
-  Printer, CheckCircle2, Download,
+  Printer, CheckCircle2, Download, Lock,
 } from "lucide-react";
 
 interface TrainRoute {
@@ -328,55 +328,125 @@ const NewReservation = () => {
       const letter = ["A", "B", "C", "D"][col];
       seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
     }
+
+    const seatStateClass = (seat: string) => {
+      if (bookedSeats.includes(seat)) {
+        return "bg-[#1A1A2E] border border-[#3D1515] opacity-50 cursor-not-allowed";
+      }
+      if (selectedSeats.includes(seat)) {
+        return "bg-gradient-to-b from-rail-gold to-rail-gold-deep border border-rail-gold-bright text-[#0B1120] shadow-rail-gold scale-105";
+      }
+      return "bg-[hsl(var(--rail-steel-blue))] border border-border shadow-inner cursor-pointer hover:border-rail-gold hover:shadow-rail-gold-soft hover:scale-105";
+    };
+
+    const seatLabelClass = (seat: string) =>
+      cn(
+        "text-[9px] font-mono font-semibold leading-none",
+        bookedSeats.includes(seat) ? "hidden" : selectedSeats.includes(seat) ? "text-[#0B1120]" : "text-muted-foreground"
+      );
+
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-muted border border-border" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-primary" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-destructive/30" /> Booked</span>
+      <div className="space-y-6">
+        {/* Carriage shell */}
+        <div className="relative rounded-3xl border-2 border-border bg-gradient-to-b from-[hsl(var(--muted))] to-[#0D1929] p-6 overflow-x-auto shadow-rail">
+          {/* Decorative top windows */}
+          <div className="flex justify-around mb-4 px-8">
+            {Array.from({ length: Math.min(rows + 1, 12) }).map((_, i) => (
+              <div key={`tw-${i}`} className="w-8 h-5 rounded bg-card border border-border" />
+            ))}
+          </div>
+
+          {/* End labels */}
+          <div className="flex items-center justify-between px-2 mb-3">
+            <span className="text-[10px] font-inter uppercase tracking-widest text-rail-gold">FRONT ›</span>
+            <span className="text-[10px] font-inter uppercase tracking-widest text-muted-foreground">‹ REAR</span>
+          </div>
+
+          {/* Column headers */}
+          <div className="grid items-center mb-2 min-w-[360px]" style={{ gridTemplateColumns: "32px repeat(2, 44px) 28px repeat(2, 44px)" }}>
+            <span />
+            <span className="text-center text-[11px] font-inter uppercase tracking-widest text-rail-gold">A</span>
+            <span className="text-center text-[11px] font-inter uppercase tracking-widest text-rail-gold">B</span>
+            <span />
+            <span className="text-center text-[11px] font-inter uppercase tracking-widest text-rail-gold">C</span>
+            <span className="text-center text-[11px] font-inter uppercase tracking-widest text-rail-gold">D</span>
+          </div>
+
+          {/* Seat grid */}
+          <div className="space-y-2 min-w-[360px] relative">
+            {/* Aisle dashed line */}
+            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-border pointer-events-none" />
+
+            {Array.from({ length: rows }).map((_, rowIdx) => {
+              const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
+              const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
+              return (
+                <div key={`row-${rowIdx}`} className="grid items-center" style={{ gridTemplateColumns: "32px repeat(2, 44px) 28px repeat(2, 44px)" }}>
+                  <span className="text-[11px] font-mono text-[hsl(var(--rail-text-muted))] text-center">{rowIdx + 1}</span>
+                  {left.map((seat) => (
+                    <button
+                      key={seat}
+                      onClick={() => toggleSeat(seat)}
+                      disabled={bookedSeats.includes(seat)}
+                      className={cn(
+                        "h-12 w-10 mx-auto rounded-t-2xl rounded-b-md flex items-center justify-center transition-all duration-150",
+                        seatStateClass(seat)
+                      )}
+                    >
+                      {bookedSeats.includes(seat) ? (
+                        <Lock className="h-2.5 w-2.5 text-[#5A2828]" />
+                      ) : (
+                        <span className={seatLabelClass(seat)}>{seat}</span>
+                      )}
+                    </button>
+                  ))}
+                  <span />
+                  {right.map((seat) => (
+                    <button
+                      key={seat}
+                      onClick={() => toggleSeat(seat)}
+                      disabled={bookedSeats.includes(seat)}
+                      className={cn(
+                        "h-12 w-10 mx-auto rounded-t-2xl rounded-b-md flex items-center justify-center transition-all duration-150",
+                        seatStateClass(seat)
+                      )}
+                    >
+                      {bookedSeats.includes(seat) ? (
+                        <Lock className="h-2.5 w-2.5 text-[#5A2828]" />
+                      ) : (
+                        <span className={seatLabelClass(seat)}>{seat}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Decorative bottom windows */}
+          <div className="flex justify-around mt-4 px-8">
+            {Array.from({ length: Math.min(rows + 1, 12) }).map((_, i) => (
+              <div key={`bw-${i}`} className="w-8 h-5 rounded bg-card border border-border" />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr auto 1fr 1fr" }}>
-          {Array.from({ length: rows }).map((_, rowIdx) => {
-            const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-            const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-            return [
-              ...left.map((seat) => (
-                <button
-                  key={seat}
-                  onClick={() => toggleSeat(seat)}
-                  disabled={bookedSeats.includes(seat)}
-                  className={cn(
-                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat)
-                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                      : selectedSeats.includes(seat)
-                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}
-                >
-                  {seat}
-                </button>
-              )),
-              <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-muted-foreground/30 text-xs">│</div>,
-              ...right.map((seat) => (
-                <button
-                  key={seat}
-                  onClick={() => toggleSeat(seat)}
-                  disabled={bookedSeats.includes(seat)}
-                  className={cn(
-                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat)
-                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                      : selectedSeats.includes(seat)
-                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}
-                >
-                  {seat}
-                </button>
-              )),
-            ];
-          })}
+
+        {/* Legend */}
+        <div className="flex items-center justify-center gap-6 text-[11px] font-inter uppercase tracking-widest text-muted-foreground">
+          <span className="flex items-center gap-2">
+            <span className="w-5 h-6 rounded-t-xl rounded-b-sm bg-[hsl(var(--rail-steel-blue))] border border-border" />
+            Available
+          </span>
+          <span className="h-4 w-px bg-border" />
+          <span className="flex items-center gap-2">
+            <span className="w-5 h-6 rounded-t-xl rounded-b-sm bg-gradient-to-b from-rail-gold to-rail-gold-deep border border-rail-gold-bright" />
+            Selected
+          </span>
+          <span className="h-4 w-px bg-border" />
+          <span className="flex items-center gap-2">
+            <span className="w-5 h-6 rounded-t-xl rounded-b-sm bg-[#1A1A2E] border border-[#3D1515] opacity-60" />
+            Reserved
+          </span>
         </div>
       </div>
     );
