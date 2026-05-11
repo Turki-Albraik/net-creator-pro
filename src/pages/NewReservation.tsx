@@ -338,11 +338,7 @@ const NewReservation = () => {
         </div>
 
         <div className="carriage rounded-3xl p-4 md:p-8 relative overflow-hidden">
-          {/* Carriage front (driver cabin) */}
-          <div className="flex items-center justify-between mb-5 px-2">
-            <span className="label-caps text-foreground/70">Carriage A · Forward</span>
-            <span className="label-caps text-foreground/70">Window Seats</span>
-          </div>
+
 
           <div className="flex gap-3 md:gap-5 items-stretch">
             {/* Left side windows (porthole column) */}
