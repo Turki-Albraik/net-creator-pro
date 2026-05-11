@@ -108,26 +108,139 @@ const Reports = () => {
   }, [period]);
 
   const handlePrintAll = () => {
-    const collectSvg = (ref: React.RefObject<HTMLDivElement>, title: string) => {
-      if (!ref.current) return `<h2>${title}</h2><p>No data</p>`;
-      const svg = ref.current.querySelector("svg");
-      return `<h2 style="margin-top:32px;">${title}</h2>${svg ? svg.outerHTML : "<p>No chart data</p>"}`;
+    // Brand palette (matches app theme)
+    const C_PRIMARY = "#B59410";   // brass
+    const C_SECONDARY = "#1A4332"; // forest
+    const C_TERTIARY = "#243A6B";  // navy
+    const C_TEXT = "#0B1F17";
+    const C_MUTED = "#6B7280";
+    const C_BORDER = "#E5DFC6";
+
+    // Clone an SVG and resolve any hsl(var(--xxx)) into concrete brand colors
+    const resolveColors = (svg: SVGSVGElement, accent: string) => {
+      const clone = svg.cloneNode(true) as SVGSVGElement;
+      const replaceVar = (val: string | null) => {
+        if (!val) return val;
+        if (val.includes("--primary")) return accent;
+        if (val.includes("--secondary")) return C_SECONDARY;
+        if (val.includes("--muted-foreground")) return C_MUTED;
+        if (val.includes("--border")) return C_BORDER;
+        if (val.includes("--card")) return "#FFFDF3";
+        if (val.includes("var(")) return C_TEXT;
+        return val;
+      };
+      clone.querySelectorAll("*").forEach((el) => {
+        ["fill", "stroke"].forEach((attr) => {
+          const v = el.getAttribute(attr);
+          const r = replaceVar(v);
+          if (r && r !== v) el.setAttribute(attr, r);
+        });
+        const style = (el as HTMLElement).getAttribute("style");
+        if (style && style.includes("var(")) {
+          (el as HTMLElement).setAttribute(
+            "style",
+            style
+              .replace(/hsl\(var\(--primary\)\)/g, accent)
+              .replace(/hsl\(var\(--secondary\)\)/g, C_SECONDARY)
+              .replace(/hsl\(var\(--muted-foreground\)\)/g, C_MUTED)
+              .replace(/hsl\(var\(--border\)\)/g, C_BORDER)
+          );
+        }
+      });
+      // Ensure viewBox so it scales nicely
+      const w = clone.getAttribute("width");
+      const h = clone.getAttribute("height");
+      if (!clone.getAttribute("viewBox") && w && h) {
+        clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      }
+      clone.removeAttribute("width");
+      clone.setAttribute("width", "100%");
+      clone.setAttribute("height", "360");
+      return clone.outerHTML;
     };
+
+    const collectSvg = (ref: React.RefObject<HTMLDivElement>, title: string, accent: string) => {
+      const svg = ref.current?.querySelector("svg") as SVGSVGElement | null;
+      const body = svg
+        ? resolveColors(svg, accent)
+        : `<p class="empty">No chart data available</p>`;
+      return `<section class="chart"><h2>${title}</h2><div class="chart-body">${body}</div></section>`;
+    };
+
+    const periodLabel =
+      period === "all" ? "All Time"
+      : period === "daily" ? "Last 24 Hours"
+      : period === "weekly" ? "Last 7 Days"
+      : "Last 30 Days";
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    printWindow.document.write(`
-      <html><head><title>سِـكَّـة - Reports</title>
-      <style>body{font-family:'Segoe UI',sans-serif;padding:40px;text-align:center;}h1{font-size:24px;margin-bottom:8px;}h2{font-size:18px;margin-bottom:16px;color:#333;}svg{max-width:100%;height:auto;}@media print{body{padding:20px;}}</style>
-      </head><body>
-      <h1>سِـكَّـة - Reports & Analytics</h1>
-      <p style="color:#888;margin-bottom:24px;">Period: ${period === "all" ? "All Time" : period}</p>
-      ${collectSvg(revenueRef, "Revenue by Period")}
-      ${collectSvg(routeRef, "Bookings by Route")}
-      ${collectSvg(occupancyRef, "Train Utilization Rate")}
-      <script>window.print();</script>
-      </body></html>
-    `);
+    printWindow.document.write(`<!doctype html>
+<html><head><meta charset="utf-8"><title>سِـكَّـة — Reports & Analytics</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Calibri','Carlito','Segoe UI',Tahoma,sans-serif;
+    color: ${C_TEXT};
+    background: #FDFCF5;
+    margin: 0;
+    padding: 40px 48px;
+  }
+  header {
+    border-bottom: 2px solid ${C_PRIMARY};
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+    color: ${C_SECONDARY};
+    letter-spacing: -0.01em;
+  }
+  .meta { color: ${C_MUTED}; font-size: 13px; }
+  .meta strong { color: ${C_TEXT}; }
+  section.chart {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: #FFFDF3;
+    border: 1px solid ${C_BORDER};
+    border-radius: 10px;
+    page-break-inside: avoid;
+  }
+  section.chart h2 {
+    font-size: 16px;
+    margin: 0 0 16px;
+    color: ${C_SECONDARY};
+    border-left: 4px solid ${C_PRIMARY};
+    padding-left: 10px;
+  }
+  .chart-body { width: 100%; }
+  .chart-body svg { width: 100% !important; height: auto !important; max-height: 360px; }
+  .empty { color: ${C_MUTED}; text-align: center; padding: 40px 0; font-style: italic; }
+  footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid ${C_BORDER};
+    font-size: 11px;
+    color: ${C_MUTED};
+    text-align: center;
+  }
+  @media print {
+    body { padding: 20px 24px; }
+    section.chart { box-shadow: none; }
+  }
+</style>
+</head><body>
+  <header>
+    <h1>سِـكَّـة — Reports & Analytics</h1>
+    <div class="meta"><strong>Period:</strong> ${periodLabel} &nbsp;·&nbsp; <strong>Generated:</strong> ${format(new Date(), "PPP p")}</div>
+  </header>
+  ${collectSvg(revenueRef, "Revenue by Period", C_PRIMARY)}
+  ${collectSvg(routeRef, "Bookings by Route", C_SECONDARY)}
+  ${collectSvg(occupancyRef, "Train Utilization Rate (%)", C_TERTIARY)}
+  <footer>© ${new Date().getFullYear()} سِـكَّـة · RailSync — Confidential Internal Report</footer>
+  <script>window.onload = () => setTimeout(() => window.print(), 250);</script>
+</body></html>`);
     printWindow.document.close();
   };
 
