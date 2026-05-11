@@ -191,15 +191,14 @@ const MyReservations = () => {
     fetchReservations();
   };
 
-  const openPresentTicket = async (res: Reservation) => {
-    const ticketUrl = `${window.location.origin}/ticket/${res.booking_id}`;
-    const qr = await QRCode.toDataURL(ticketUrl, {
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 320,
-      color: { dark: "#0B1F17", light: "#F4E9B8" },
+  const openPresentTicket = (res: Reservation) => {
+    const barcode = generateBarcodeDataUrl(res.booking_id, {
+      dark: "#0B1F17",
+      light: "#F4E9B8",
+      height: 90,
+      width: 2.4,
     });
-    setPresentQr(qr);
+    setPresentQr(barcode);
     setPresentRes(res);
     setPresentOpen(true);
   };
