@@ -160,7 +160,6 @@ const Sidebar = () => {
       >
         <LogoRow expanded={isHovered} />
         <NavList expanded={isHovered} />
-        <UserCard expanded={isHovered} />
       </aside>
 
       {/* MOBILE DRAWER */}
@@ -173,7 +172,6 @@ const Sidebar = () => {
           <aside className="relative w-[280px] h-full bg-forest-950 dark:bg-navy-950 border-r border-forest-800 dark:border-navy-800 flex flex-col animate-slide-in">
             <LogoRow expanded withClose />
             <NavList expanded onNavigate={() => setMobileOpen(false)} />
-            <UserCard expanded />
           </aside>
         </div>
       )}
