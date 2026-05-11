@@ -329,54 +329,66 @@ const NewReservation = () => {
       seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
     }
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-muted border border-border" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-primary" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-destructive/30" /> Booked</span>
+      <div className="space-y-4 animate-heritage-in">
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="label-caps text-muted-foreground mr-2">Availability</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-available !h-4 !w-6 !rounded" /> Available</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-selected !h-4 !w-6 !rounded" /> Selected</span>
+          <span className="flex items-center gap-1.5"><span className="seat-btn seat-booked !h-4 !w-6 !rounded" /> Booked</span>
         </div>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "1fr 1fr auto 1fr 1fr" }}>
-          {Array.from({ length: rows }).map((_, rowIdx) => {
-            const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-            const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-            return [
-              ...left.map((seat) => (
-                <button
-                  key={seat}
-                  onClick={() => toggleSeat(seat)}
-                  disabled={bookedSeats.includes(seat)}
-                  className={cn(
-                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat)
-                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                      : selectedSeats.includes(seat)
-                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}
-                >
-                  {seat}
-                </button>
-              )),
-              <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-muted-foreground/30 text-xs">│</div>,
-              ...right.map((seat) => (
-                <button
-                  key={seat}
-                  onClick={() => toggleSeat(seat)}
-                  disabled={bookedSeats.includes(seat)}
-                  className={cn(
-                    "h-10 rounded-md text-xs font-mono font-medium transition-all border",
-                    bookedSeats.includes(seat)
-                      ? "bg-destructive/20 text-destructive-foreground/50 border-destructive/30 cursor-not-allowed"
-                      : selectedSeats.includes(seat)
-                      ? "bg-primary text-primary-foreground border-primary shadow-md scale-105"
-                      : "bg-muted text-muted-foreground border-border hover:border-primary hover:bg-primary/10"
-                  )}
-                >
-                  {seat}
-                </button>
-              )),
-            ];
-          })}
+
+        <div className="carriage rounded-3xl p-4 md:p-8 relative overflow-hidden">
+          {/* Carriage front (driver cabin) */}
+          <div className="flex items-center justify-between mb-5 px-2">
+            <span className="label-caps text-foreground/70">Carriage A · Forward</span>
+            <span className="label-caps text-foreground/70">→ Direction of Travel</span>
+          </div>
+
+          {/* Windows row backdrop */}
+          <div className="grid grid-cols-6 gap-2 mb-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="train-window rounded-lg h-10 backdrop-blur-sm border border-white/40" />
+            ))}
+          </div>
+
+          <div className="grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 40px 1fr 1fr" }}>
+            {Array.from({ length: rows }).map((_, rowIdx) => {
+              const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
+              const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
+              const renderSeat = (seat: string | undefined) => {
+                if (!seat) return <div key={Math.random()} />;
+                const isBooked = bookedSeats.includes(seat);
+                const isSelected = selectedSeats.includes(seat);
+                return (
+                  <button
+                    key={seat}
+                    onClick={() => toggleSeat(seat)}
+                    disabled={isBooked}
+                    className={cn(
+                      "seat-btn",
+                      isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                    )}
+                  >
+                    <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                  </button>
+                );
+              };
+              return [
+                ...left.map(renderSeat),
+                <div key={`aisle-${rowIdx}`} className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
+                  {rowIdx + 1}
+                </div>,
+                ...right.map(renderSeat),
+              ];
+            })}
+          </div>
+
+          {/* Windows row backdrop bottom */}
+          <div className="grid grid-cols-6 gap-2 mt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="train-window rounded-lg h-10 backdrop-blur-sm border border-white/40" />
+            ))}
+          </div>
         </div>
       </div>
     );
