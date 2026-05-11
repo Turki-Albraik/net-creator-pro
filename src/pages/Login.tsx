@@ -33,15 +33,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="text-center space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface p-4 relative overflow-hidden">
+      <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-forest-600/20 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-amber-brand/20 blur-3xl pointer-events-none" />
+      <Card className="w-full max-w-md relative shadow-card border-muted-border rounded-3xl">
+        <CardHeader className="text-center space-y-4 pt-8">
           <div className="flex justify-center">
-            <img src={logoImg} alt="سِـكَّـة logo" className="h-14 w-14 rounded-xl object-cover" />
+            <div className="h-16 w-16 rounded-2xl bg-forest-950 flex items-center justify-center shadow-glow-green">
+              <img src={logoImg} alt="سِـكَّـة logo" className="h-12 w-12 rounded-xl object-cover" />
+            </div>
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">سِـكَّـة</CardTitle>
-            <CardDescription className="mt-1">Sign in with your ID or Email</CardDescription>
+            <CardTitle className="font-serif text-3xl text-forest-950">سِـكَّـة</CardTitle>
+            <CardDescription className="mt-1 text-muted-text">Sign in to your account</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
