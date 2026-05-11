@@ -1,188 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   RAIL CONNECT — Corporate Railway Design System
-   Premium European intercity rail aesthetic. All colors HSL.
-   ============================================================ */
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
 
 @layer base {
   :root {
-    /* Primary surfaces — Deep Midnight Navy */
-    --background: 222 47% 8%;          /* #0B1120 */
-    --foreground: 225 100% 97%;        /* #F0F4FF Pearl White */
+    --background: 220 20% 97%;
+    --foreground: 220 30% 12%;
 
-    --card: 220 37% 16%;               /* #1A2438 Elevated Navy Panel */
-    --card-foreground: 225 100% 97%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 12%;
 
-    --popover: 220 37% 16%;
-    --popover-foreground: 225 100% 97%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 12%;
 
-    /* Primary action — Warm Brushed Gold */
-    --primary: 44 56% 54%;             /* #C9A84C */
-    --primary-foreground: 222 47% 8%;  /* dark text on gold */
+    --primary: 220 60% 20%;
+    --primary-foreground: 40 100% 97%;
 
-    /* Secondary — Steel Blue */
-    --secondary: 213 52% 25%;          /* #1E3A5F */
-    --secondary-foreground: 225 100% 97%;
+    --secondary: 35 100% 55%;
+    --secondary-foreground: 220 60% 10%;
 
-    --muted: 220 40% 11%;              /* #111827 Rich Charcoal */
-    --muted-foreground: 220 28% 65%;   /* #8A9BBF Silver-Blue */
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 44 56% 54%;              /* gold accent */
-    --accent-foreground: 222 47% 8%;
+    --accent: 35 95% 50%;
+    --accent-foreground: 220 60% 10%;
 
-    --destructive: 0 63% 34%;          /* #8B2020 Claret */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 218 35% 27%;             /* #2D3F5C Subtle Steel */
-    --input: 218 35% 27%;
-    --ring: 44 56% 54%;                /* gold focus ring */
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 60% 20%;
 
     --radius: 0.75rem;
 
-    /* Sidebar — slightly deeper than background */
-    --sidebar-background: 222 50% 6%;          /* near-black navy */
-    --sidebar-foreground: 220 28% 75%;
-    --sidebar-primary: 44 56% 54%;             /* gold */
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 220 37% 14%;
-    --sidebar-accent-foreground: 225 100% 97%;
-    --sidebar-border: 218 35% 22%;
-    --sidebar-ring: 44 56% 54%;
+    --sidebar-background: 220 60% 14%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 35 100% 55%;
+    --sidebar-primary-foreground: 220 60% 10%;
+    --sidebar-accent: 220 50% 22%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 40% 22%;
+    --sidebar-ring: 35 100% 55%;
 
-    /* Rail-specific tokens */
-    --rail-gold: 44 56% 54%;
-    --rail-gold-bright: 43 67% 65%;            /* #E2C06A */
-    --rail-gold-deep: 38 74% 30%;              /* #8B6914 */
-    --rail-success: 146 47% 33%;               /* #2E7D52 */
-    --rail-success-bg: 146 50% 11%;
-    --rail-claret: 0 63% 34%;
-    --rail-claret-bg: 0 63% 11%;
-    --rail-steel-blue: 213 52% 25%;
-    --rail-text-muted: 220 24% 38%;            /* #4A5A78 */
-    --rail-surface: 220 40% 11%;
-    --rail-surface-2: 220 37% 16%;
-
-    /* Legacy train tokens — keep for backwards compat */
-    --train-steel: 218 35% 35%;
-    --train-track: 218 20% 50%;
-    --train-signal: 146 47% 42%;
-    --train-warning: 44 56% 54%;
+    --train-steel: 220 20% 35%;
+    --train-track: 220 15% 75%;
+    --train-signal: 145 60% 42%;
+    --train-warning: 45 100% 52%;
   }
 
-  /* Dark mode is the canonical look — keep .dark identical */
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 225 100% 97%;
-    --card: 220 37% 16%;
-    --card-foreground: 225 100% 97%;
-    --popover: 220 37% 16%;
-    --popover-foreground: 225 100% 97%;
-    --primary: 44 56% 54%;
-    --primary-foreground: 222 47% 8%;
-    --secondary: 213 52% 25%;
-    --secondary-foreground: 225 100% 97%;
-    --muted: 220 40% 11%;
-    --muted-foreground: 220 28% 65%;
-    --accent: 44 56% 54%;
-    --accent-foreground: 222 47% 8%;
-    --destructive: 0 63% 34%;
+    --background: 220 30% 8%;
+    --foreground: 220 15% 92%;
+
+    --card: 220 30% 12%;
+    --card-foreground: 220 15% 92%;
+
+    --popover: 220 30% 12%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 35 100% 55%;
+    --primary-foreground: 220 60% 10%;
+
+    --secondary: 220 40% 22%;
+    --secondary-foreground: 220 15% 90%;
+
+    --muted: 220 30% 16%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 35 95% 50%;
+    --accent-foreground: 220 60% 10%;
+
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 218 35% 27%;
-    --input: 218 35% 27%;
-    --ring: 44 56% 54%;
 
-    --sidebar-background: 222 50% 6%;
-    --sidebar-foreground: 220 28% 75%;
-    --sidebar-primary: 44 56% 54%;
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 220 37% 14%;
-    --sidebar-accent-foreground: 225 100% 97%;
-    --sidebar-border: 218 35% 22%;
-    --sidebar-ring: 44 56% 54%;
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 35 100% 55%;
 
-    --train-steel: 218 35% 35%;
-    --train-track: 218 20% 50%;
-    --train-signal: 146 47% 42%;
-    --train-warning: 44 56% 54%;
+    --sidebar-background: 220 40% 6%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 35 100% 55%;
+    --sidebar-primary-foreground: 220 60% 10%;
+    --sidebar-accent: 220 40% 14%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 30% 14%;
+    --sidebar-ring: 35 100% 55%;
+
+    --train-steel: 220 15% 55%;
+    --train-track: 220 10% 40%;
+    --train-signal: 145 55% 48%;
+    --train-warning: 45 95% 55%;
   }
 }
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @layer base {
   * {
     @apply border-border;
   }
 
-  html {
-    font-size: 15px;
-  }
-
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    font-family: 'DM Sans', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.01em;
-  }
-}
-
-@layer components {
-  /* Premium hero diagonal pinstripe texture */
-  .rail-hero-pattern {
-    background-image:
-      repeating-linear-gradient(
-        135deg,
-        transparent 0,
-        transparent 22px,
-        hsl(var(--rail-gold) / 0.04) 22px,
-        hsl(var(--rail-gold) / 0.04) 23px
-      );
-  }
-
-  /* Gold spinning loader ring */
-  .rail-spinner {
-    @apply inline-block h-6 w-6 rounded-full border-2 border-[hsl(var(--border))] border-t-[hsl(var(--rail-gold))] animate-spin;
-  }
-
-  /* Section header with gold left bar */
-  .rail-section-title {
-    @apply font-display text-lg font-semibold text-foreground border-l-4 border-[hsl(var(--rail-gold))] pl-3;
-  }
-
-  /* Status badge variants */
-  .rail-pill {
-    @apply inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold border;
-  }
-  .rail-pill-available {
-    @apply bg-[hsl(var(--rail-success-bg))] text-[#4ADE80] border-[hsl(var(--rail-success))];
-  }
-  .rail-pill-booked {
-    background-color: #2B2000;
-    color: hsl(var(--rail-gold));
-    border-color: hsl(var(--rail-gold-deep));
-  }
-  .rail-pill-cancelled {
-    background-color: #2B0A0A;
-    color: #F87171;
-    border-color: hsl(var(--rail-claret));
-  }
-  .rail-pill-first {
-    background: linear-gradient(135deg, hsl(var(--rail-gold)), hsl(var(--rail-gold-deep)));
-    color: hsl(var(--background));
-    border-color: hsl(var(--rail-gold-bright));
-    @apply font-bold;
-  }
-  .rail-pill-economy {
-    background-color: hsl(var(--rail-steel-blue));
-    color: #93C5FD;
-    border-color: hsl(var(--border));
+    font-family: 'Space Grotesk', sans-serif;
   }
 }
