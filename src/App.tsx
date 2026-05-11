@@ -18,6 +18,7 @@ import Signup from "./pages/Signup.tsx";
 import MyReservations from "./pages/MyReservations.tsx";
 import MyProfile from "./pages/MyProfile.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import TicketView from "./pages/TicketView.tsx";
 
 const ProtectedRoute = ({ children, adminOnly = false, allowPassenger = false }: { children: React.ReactNode; adminOnly?: boolean; allowPassenger?: boolean }) => {
   const { isAuthenticated, employee } = useAuth();
