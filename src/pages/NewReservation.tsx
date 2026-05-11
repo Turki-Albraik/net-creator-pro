@@ -139,11 +139,16 @@ const NewReservation = () => {
   const sources = [...new Set(routes.map((r) => r.source))];
   const destinations = [...new Set(routes.map((r) => r.destination))].filter((d) => d !== sourceFilter);
 
-  const filteredRoutes = routes.filter(
-    (r) =>
-      (!sourceFilter || r.source === sourceFilter) &&
-      (!destFilter || r.destination === destFilter)
-  );
+  const filteredRoutes = routes
+    .filter(
+      (r) =>
+        (!sourceFilter || r.source === sourceFilter) &&
+        (!destFilter || r.destination === destFilter)
+    )
+    .sort((a, b) => {
+      if (sortBy === "price") return a.price_per_ticket - b.price_per_ticket;
+      return a.departure_time.localeCompare(b.departure_time);
+    });
 
   const toggleSeat = (seat: string) => {
     if (bookedSeats.includes(seat)) return;
