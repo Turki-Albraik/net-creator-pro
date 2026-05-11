@@ -29,7 +29,7 @@ const StatCard = ({ title, value, change, changeType = "neutral", icon: Icon }: 
             </p>
           )}
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted shrink-0">
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
