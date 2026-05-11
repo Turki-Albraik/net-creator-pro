@@ -638,7 +638,6 @@ const NewReservation = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
                 </SelectContent>
               </Select>
             </div>
