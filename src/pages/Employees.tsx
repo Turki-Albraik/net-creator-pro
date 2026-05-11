@@ -136,7 +136,7 @@ const Employees = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-16 pt-20 md:pt-8 px-4 md:px-8 pb-8">
         <DashboardHeader title="Employees" subtitle="Manage your team members" />
 
         <div className="flex gap-3 mt-6">

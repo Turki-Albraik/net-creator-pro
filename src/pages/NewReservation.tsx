@@ -385,7 +385,7 @@ const NewReservation = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-16 pt-20 md:pt-8 px-4 md:px-8 pb-8">
         <div className="flex items-center gap-4 border-b border-border pb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/reservations")}>
             <ArrowLeft className="h-5 w-5" />
