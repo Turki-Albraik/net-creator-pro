@@ -282,9 +282,13 @@ const NewReservation = () => {
     }
 
     // Bug #10 — Match passengers by name AND email
+    const totalCoachesForPassengers = getCoachCount(selectedRoute.total_seats);
     for (let pi = 0; pi < passengers.length; pi++) {
       const p = passengers[pi];
-      const tripAmount = selectedRoute.price_per_ticket;
+      const seatForP = selectedSeats[pi];
+      const tripAmount = seatForP
+        ? seatPrice(seatForP, selectedRoute.price_per_ticket, totalCoachesForPassengers)
+        : selectedRoute.price_per_ticket;
       const fullPhone = pi === 0 && contactPhone ? `${contactCountryCode}${contactPhone}` : undefined;
 
       const { data: existing } = await supabase
