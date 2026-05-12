@@ -114,7 +114,7 @@ const NewReservation = () => {
 
   const [sourceFilter, setSourceFilter] = useState("");
   const [destFilter, setDestFilter] = useState("");
-  const [sortBy, setSortBy] = useState<"price" | "departure">("departure");
+  const [sortBy, setSortBy] = useState<"price" | "price_desc" | "departure">("departure");
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -189,6 +189,7 @@ const NewReservation = () => {
     )
     .sort((a, b) => {
       if (sortBy === "price") return a.price_per_ticket - b.price_per_ticket;
+      if (sortBy === "price_desc") return b.price_per_ticket - a.price_per_ticket;
       return a.departure_time.localeCompare(b.departure_time);
     });
 
@@ -672,11 +673,12 @@ const NewReservation = () => {
                 <h3 className="font-display text-lg font-semibold">Available Routes</h3>
                 <div className="flex items-center gap-2">
                   <Label className="text-xs text-muted-foreground label-caps">Sort by</Label>
-                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as "price" | "departure")}>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as "price" | "price_desc" | "departure")}>
                     <SelectTrigger className="w-[200px] h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="departure">Departure Time</SelectItem>
                       <SelectItem value="price">Price (Low to High)</SelectItem>
+                      <SelectItem value="price_desc">Price (High to Low)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
