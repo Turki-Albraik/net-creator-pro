@@ -224,9 +224,13 @@ const MyReservations = () => {
 
   const handleSaveSeatChange = async () => {
     if (!selectedRes || newSeats.length !== selectedRes.num_tickets) return;
+    const totalCoaches = routeInfo ? getCoachCount(routeInfo.total_seats) : 1;
+    const newTotal = routeInfo
+      ? computeTotal(newSeats, routeInfo.price_per_ticket, totalCoaches, selectedRes.num_tickets)
+      : selectedRes.total_amount;
     const { error } = await supabase
       .from("reservations")
-      .update({ seat_numbers: newSeats } as any)
+      .update({ seat_numbers: newSeats, total_amount: newTotal } as any)
       .eq("id", selectedRes.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
