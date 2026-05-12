@@ -614,7 +614,7 @@ const NewReservation = () => {
                     return (
                       <button
                         key={r.id}
-                        onClick={() => { setSelectedRoute(r); setSelectedSeats([]); }}
+                        onClick={() => { setSelectedRoute(r); setSelectedSeats([]); setActiveCoach(1); }}
                         className={cn(
                           "w-full text-left p-5 rounded-xl border transition-all",
                           selectedRoute?.id === r.id
