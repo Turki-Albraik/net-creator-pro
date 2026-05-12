@@ -88,16 +88,44 @@ const TicketView = () => {
     if (!printWindow) return;
 
     const totalCoachesPdf = getCoachCount(ticket.total_seats || 0);
-    const names = (ticket.passenger_name || "").split(",");
-    const passengersHtml = names.map((n, i) => {
-      const seat = ticket.seat_numbers?.[i];
-      if (!seat) return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`;
-      const { coach } = parseSeat(seat);
-      const cls = getCoachClass(coach, totalCoachesPdf);
-      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
-    }).join("");
+    const names = (ticket.passenger_name || "").split(",").map(n => n.trim());
+    const seats = ticket.seat_numbers || [];
+    const count = Math.max(names.length, seats.length, 1);
+    const perPrice = Number(ticket.total_amount) / count;
 
-    const stubSeat = ticket.seat_numbers?.[0] || "—";
+    const ticketsHtml = Array.from({ length: count }).map((_, i) => {
+      const seat = seats[i] || "—";
+      const name = names[i] || `Passenger ${i + 1}`;
+      const info = seats[i] ? parseSeat(seats[i]) : null;
+      const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
+      const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
+      return `
+        <div class="ticket">
+          <div class="main">
+            <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
+            <div class="route">${ticket.source || ""} → ${ticket.destination || ""}</div>
+            <div class="grid">
+              <div class="cell"><span class="label">Train</span><span class="value">${ticket.train_id || ""}</span></div>
+              <div class="cell"><span class="label">Date</span><span class="value">${ticket.travel_date}</span></div>
+              <div class="cell"><span class="label">Departure</span><span class="value">${ticket.departure_time || ""}</span></div>
+              <div class="cell"><span class="label">Arrival</span><span class="value">${ticket.arrival_time || ""}</span></div>
+            </div>
+            <div style="margin-top:14px">
+              <div class="row"><span class="label">Passenger</span><span class="value">${name}</span></div>
+              ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
+            </div>
+            <div class="seats">SEAT · ${seat}</div>
+            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
+          </div>
+          <div class="stub">
+            <div class="stub-label">Boarding Pass</div>
+            <div class="seat">${seat}</div>
+            <div class="qr"><img src="${qr}" alt="Barcode" /></div>
+            <div class="bk">${ticket.booking_id}</div>
+          </div>
+        </div>
+      `;
+    }).join('<div style="page-break-after:always"></div>');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
@@ -106,7 +134,7 @@ const TicketView = () => {
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 28px;
           background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); min-height: 100vh; }
-        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
+        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto 24px;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           border: 1px solid #B59410; border-radius: 18px;
           box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5); overflow: hidden; color: #FDFCF5; }
@@ -133,27 +161,7 @@ const TicketView = () => {
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
         @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
-      <div class="ticket">
-        <div class="main">
-          <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah</small></div>
-          <div class="route">${ticket.source || ""} → ${ticket.destination || ""}</div>
-          <div class="grid">
-            <div class="cell"><span class="label">Train</span><span class="value">${ticket.train_id || ""}</span></div>
-            <div class="cell"><span class="label">Date</span><span class="value">${ticket.travel_date}</span></div>
-            <div class="cell"><span class="label">Departure</span><span class="value">${ticket.departure_time || ""}</span></div>
-            <div class="cell"><span class="label">Arrival</span><span class="value">${ticket.arrival_time || ""}</span></div>
-          </div>
-          <div style="margin-top:14px">${passengersHtml}</div>
-          <div class="seats">SEATS · ${(ticket.seat_numbers || []).join("  ·  ")}</div>
-          <div class="total"><span class="lbl">Total Price</span><span class="amt">SAR ${Number(ticket.total_amount).toFixed(0)}</span></div>
-        </div>
-        <div class="stub">
-          <div class="stub-label">Boarding Pass</div>
-          <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qr}" alt="Barcode" /></div>
-          <div class="bk">${ticket.booking_id}</div>
-        </div>
-      </div>
+      ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
       </body></html>
     `);
@@ -183,121 +191,115 @@ const TicketView = () => {
 
   return (
     <div className="min-h-screen px-4 py-10 md:py-16" style={{ background: "radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%)" }}>
-      <div className="max-w-3xl mx-auto">
-        <div className="rounded-2xl overflow-hidden border" style={{
-          borderColor: "#B59410",
-          background: "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06))",
-          backdropFilter: "blur(14px)",
-          color: "#FDFCF5",
-          boxShadow: "0 30px 60px -20px rgba(0,0,0,0.5)",
-        }}>
-          <div className="grid md:grid-cols-[1fr_220px]">
-            <div className="p-6 md:p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="font-display text-2xl" style={{ color: "#F4E9B8" }}>سِـكَّـة</h1>
-                  <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Sikkah</p>
-                </div>
-                {isCancelled && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#7f1d1d", color: "#fff" }}>
-                    CANCELLED
-                  </span>
-                )}
-              </div>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {(() => {
+          const tc = getCoachCount(ticket.total_seats || 0);
+          const names = (ticket.passenger_name || "").split(",").map(n => n.trim());
+          const seats = ticket.seat_numbers || [];
+          const count = Math.max(names.length, seats.length, 1);
+          const perPrice = Number(ticket.total_amount) / count;
 
-              <p className="font-display text-3xl md:text-4xl font-bold mt-6 mb-6">
-                {ticket.source} → {ticket.destination}
-              </p>
+          return Array.from({ length: count }).map((_, i) => {
+            const seat = seats[i];
+            const name = names[i] || `Passenger ${i + 1}`;
+            const info = seat ? parseSeat(seat) : null;
+            const cls = info ? getCoachClass(info.coach, tc) : null;
 
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                {[
-                  ["Train", ticket.train_id],
-                  ["Date", ticket.travel_date],
-                  ["Departure", ticket.departure_time],
-                  ["Arrival", ticket.arrival_time],
-                ].map(([label, value]) => (
-                  <div key={label as string}>
-                    <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>{label}</p>
-                    <p className="font-semibold text-sm md:text-base mt-0.5">{value || "—"}</p>
-                  </div>
-                ))}
-              </div>
+            return (
+              <div key={i} className="rounded-2xl overflow-hidden border" style={{
+                borderColor: "#B59410",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06))",
+                backdropFilter: "blur(14px)",
+                color: "#FDFCF5",
+                boxShadow: "0 30px 60px -20px rgba(0,0,0,0.5)",
+              }}>
+                <div className="grid md:grid-cols-[1fr_220px]">
+                  <div className="p-6 md:p-8">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h1 className="font-display text-2xl" style={{ color: "#F4E9B8" }}>سِـكَّـة</h1>
+                        <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>
+                          Sikkah · Boarding Pass {i + 1} of {count}
+                        </p>
+                      </div>
+                      {isCancelled && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#7f1d1d", color: "#fff" }}>
+                          CANCELLED
+                        </span>
+                      )}
+                    </div>
 
-              {(() => {
-                const tc = getCoachCount(ticket.total_seats || 0);
-                const names = ticket.passenger_name.split(",");
-                return (
-                  <>
+                    <p className="font-display text-3xl md:text-4xl font-bold mt-6 mb-6">
+                      {ticket.source} → {ticket.destination}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                      {[
+                        ["Train", ticket.train_id],
+                        ["Date", ticket.travel_date],
+                        ["Departure", ticket.departure_time],
+                        ["Arrival", ticket.arrival_time],
+                      ].map(([label, value]) => (
+                        <div key={label as string}>
+                          <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>{label}</p>
+                          <p className="font-semibold text-sm md:text-base mt-0.5">{value || "—"}</p>
+                        </div>
+                      ))}
+                    </div>
+
                     <div className="mt-6 space-y-1.5">
-                      {names.map((n, i) => {
-                        const seat = ticket.seat_numbers?.[i];
-                        const info = seat ? parseSeat(seat) : null;
-                        const cls = info ? getCoachClass(info.coach, tc) : null;
-                        return (
-                          <div key={i} className="flex justify-between items-center text-sm border-b border-dashed py-1.5 gap-2 flex-wrap" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
-                            <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger {i + 1}</span>
-                            <span className="font-semibold flex items-center gap-2 flex-wrap justify-end">
-                              <span>{n.trim()}</span>
-                              {seat && (
-                                <>
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
-                                    style={{
-                                      borderColor: cls === "Business" ? "#B59410" : "rgba(245,229,184,0.4)",
-                                      color: cls === "Business" ? "#F4E9B8" : "#D4B53A",
-                                      background: cls === "Business" ? "rgba(181,148,16,0.25)" : "transparent",
-                                    }}>
-                                    {cls === "Business" && "★ "}{cls} · Coach {String(info!.coach).padStart(2, "0")}
-                                  </span>
-                                  <span className="font-mono">Seat {seat}</span>
-                                </>
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
+                      <div className="flex justify-between items-center text-sm border-b border-dashed py-1.5 gap-2 flex-wrap" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
+                        <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger</span>
+                        <span className="font-semibold">{name}</span>
+                      </div>
+                      {cls && (
+                        <div className="flex justify-between items-center text-sm border-b border-dashed py-1.5 gap-2 flex-wrap" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
+                          <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Class</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                            style={{
+                              borderColor: cls === "Business" ? "#B59410" : "rgba(245,229,184,0.4)",
+                              color: cls === "Business" ? "#F4E9B8" : "#D4B53A",
+                              background: cls === "Business" ? "rgba(181,148,16,0.25)" : "transparent",
+                            }}>
+                            {cls === "Business" && "★ "}{cls} · Coach {String(info!.coach).padStart(2, "0")}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mt-5 px-4 py-3 rounded-xl border space-y-1"
+                    <div className="mt-5 px-4 py-3 rounded-xl border flex items-center justify-between"
                       style={{ borderColor: "rgba(181,148,16,0.6)", color: "#F4E9B8" }}>
-                      {(ticket.seat_numbers || []).map((s) => {
-                        const { coach } = parseSeat(s);
-                        const c = getCoachClass(coach, tc);
-                        return (
-                          <div key={s} className="flex justify-between items-center text-sm font-mono">
-                            <span style={{ color: "#D4B53A" }} className="text-[10px] tracking-widest uppercase">
-                              {c === "Business" && "★ "}{c} · Coach {String(coach).padStart(2, "0")}
-                            </span>
-                            <span className="font-bold tracking-widest">SEAT {s}</span>
-                          </div>
-                        );
-                      })}
+                      <span style={{ color: "#D4B53A" }} className="text-[10px] tracking-widest uppercase">Seat</span>
+                      <span className="font-bold tracking-widest font-mono">{seat || "—"}</span>
                     </div>
-                  </>
-                );
-              })()}
 
-              <div className="mt-5 pt-4 border-t flex items-baseline justify-between" style={{ borderColor: "rgba(245,229,184,0.3)" }}>
-                <span className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Total Price</span>
-                <span className="font-display text-3xl font-bold" style={{ color: "#F4E9B8" }}>
-                  SAR {Number(ticket.total_amount).toFixed(0)}
-                </span>
+                    <div className="mt-5 pt-4 border-t flex items-baseline justify-between" style={{ borderColor: "rgba(245,229,184,0.3)" }}>
+                      <span className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>
+                        {count > 1 ? "Price" : "Total Price"}
+                      </span>
+                      <span className="font-display text-3xl font-bold" style={{ color: "#F4E9B8" }}>
+                        SAR {perPrice.toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 text-center border-t md:border-t-0 md:border-l border-dashed flex flex-col items-center justify-center" style={{ borderColor: "rgba(245,229,184,0.55)" }}>
+                    <p className="text-[9px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Boarding Pass</p>
+                    <p className="font-display text-4xl my-2" style={{ color: "#F4E9B8" }}>
+                      {seat || "—"}
+                    </p>
+                    {qr && (
+                      <img src={qr} alt="Barcode" className="rounded-lg max-w-[200px] w-full p-1.5" style={{ background: "#F4E9B8" }} />
+                    )}
+                    <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
+                      {ticket.booking_id}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div className="p-6 text-center border-t md:border-t-0 md:border-l border-dashed flex flex-col items-center justify-center" style={{ borderColor: "rgba(245,229,184,0.55)" }}>
-              <p className="text-[9px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Boarding Pass</p>
-              <p className="font-display text-4xl my-2" style={{ color: "#F4E9B8" }}>
-                {ticket.seat_numbers?.[0] || "—"}
-              </p>
-              {qr && (
-                <img src={qr} alt="Barcode" className="rounded-lg max-w-[200px] w-full p-1.5" style={{ background: "#F4E9B8" }} />
-              )}
-              <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
-                {ticket.booking_id}
-              </p>
-            </div>
-          </div>
-        </div>
+            );
+          });
+        })()}
 
         <div className="flex justify-center mt-6">
           <Button onClick={handleDownload} disabled={isCancelled} size="lg" className="gap-2"
