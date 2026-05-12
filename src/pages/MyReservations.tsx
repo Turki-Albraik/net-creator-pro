@@ -181,13 +181,22 @@ const MyReservations = () => {
   const openSeatReallocation = async (res: Reservation) => {
     setSelectedRes(res);
     setNewSeats([...res.seat_numbers]);
+    setActiveCoach(1);
 
     const { data: route } = await supabase
       .from("train_routes")
-      .select("id, total_seats")
+      .select("id, total_seats, price_per_ticket")
       .eq("id", res.route_id)
       .single();
-    if (route) setRouteInfo(route as unknown as TrainRoute);
+    if (route) {
+      setRouteInfo(route as unknown as TrainRoute);
+      // Default to coach of the first existing seat
+      const first = res.seat_numbers?.[0];
+      if (first) {
+        const { coach } = parseSeat(first);
+        setActiveCoach(Math.min(coach, getCoachCount((route as any).total_seats)));
+      }
+    }
 
     const { data } = await supabase
       .from("reservations")
