@@ -766,7 +766,26 @@ const NewReservation = () => {
               <h3 className="font-display font-semibold text-lg">Passenger Details</h3>
               {passengers.map((p, i) => (
                 <div key={i} className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat {selectedSeats[i] || "N/A"}</p>
+                  {(() => {
+                    const seat = selectedSeats[i];
+                    if (!seat) return <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat N/A</p>;
+                    const tc = getCoachCount(selectedRoute.total_seats);
+                    const { coach } = parseSeat(seat);
+                    const cls = getCoachClass(coach, tc);
+                    return (
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat {seat}</p>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                          cls === "Business"
+                            ? "border-[#B59410] bg-[#B59410]/10 text-[#8a700b]"
+                            : "border-border bg-muted text-muted-foreground"
+                        )}>
+                          {cls === "Business" && "★ "}{cls} · Coach {String(coach).padStart(2, "0")}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div className="space-y-1.5">
                     <Label>Full Name *</Label>
                     <Input value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} placeholder="e.g. Ahmed Al-Farsi" />
