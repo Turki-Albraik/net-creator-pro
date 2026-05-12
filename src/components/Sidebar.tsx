@@ -94,17 +94,20 @@ const Sidebar = () => {
         expanded ? "gap-3 px-3 justify-start" : "px-2 justify-center"
       )}
     >
-      <img
-        src={logoImg}
-        alt="سِـكَّـة"
-        width={80}
-        height={80}
-        decoding="async"
-        className={cn(
-          "rounded-lg object-contain shrink-0 [image-rendering:auto]",
-          expanded ? "h-10 w-10" : "h-11 w-11"
-        )}
-      />
+      {expanded ? (
+        <img
+          src={logoImg}
+          alt="سِـكَّـة"
+          width={80}
+          height={80}
+          decoding="async"
+          className="h-10 w-10 rounded-lg object-contain shrink-0 [image-rendering:auto]"
+        />
+      ) : (
+        <div className="h-11 w-11 shrink-0 rounded-xl border border-amber-brand/25 bg-forest-900 dark:bg-navy-900 flex items-center justify-center shadow-sm shadow-black/15">
+          <span className="font-serif text-sm leading-none text-amber-brand">سك</span>
+        </div>
+      )}
       <div
         className={cn(
           "transition-all duration-200 overflow-hidden",
