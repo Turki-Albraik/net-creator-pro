@@ -18,7 +18,26 @@ interface TicketData {
   train_id?: string;
   departure_time?: string;
   arrival_time?: string;
+  total_seats?: number;
 }
+
+const SEATS_PER_COACH = 60;
+
+const getCoachCount = (totalSeats: number) =>
+  Math.max(1, Math.ceil((totalSeats || SEATS_PER_COACH) / SEATS_PER_COACH));
+
+const getCoachClass = (coachNum: number, totalCoaches: number): "Business" | "Economy" => {
+  if (totalCoaches <= 2) return coachNum === 1 ? "Business" : "Economy";
+  return coachNum <= 2 ? "Business" : "Economy";
+};
+
+const parseSeat = (label: string) => {
+  if (label?.includes("-")) {
+    const [c, rest] = label.split("-");
+    return { coach: parseInt(c, 10), row: parseInt(rest.slice(0, 2), 10), letter: rest.slice(2) };
+  }
+  return { coach: 1, row: parseInt((label || "").slice(1), 10) || 0, letter: (label || "").slice(0, 1) };
+};
 
 const TicketView = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
