@@ -523,8 +523,8 @@ const NewReservation = () => {
 
             {/* 3-3 seat grid: A B C [aisle] D E F */}
             <div
-              className="flex-1 grid gap-y-3 gap-x-2"
-              style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr)) 32px repeat(3, minmax(0,1fr))" }}
+              className="flex-1 grid gap-y-1.5 gap-x-1"
+              style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr)) 24px repeat(3, minmax(0,1fr))" }}
             >
               {Array.from({ length: rows }).map((_, rIdx) => {
                 const row = rIdx + 1;
