@@ -408,7 +408,7 @@ const NewReservation = () => {
           <div class="seats">SEATS · ${selectedSeats.join("  ·  ")}</div>
           <div class="total">
             <span class="lbl">Total Price</span>
-            <span class="amt">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span>
+            <span class="amt">SAR ${computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</span>
           </div>
         </div>
         <div class="stub">
