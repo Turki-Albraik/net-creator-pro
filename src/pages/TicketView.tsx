@@ -88,16 +88,44 @@ const TicketView = () => {
     if (!printWindow) return;
 
     const totalCoachesPdf = getCoachCount(ticket.total_seats || 0);
-    const names = (ticket.passenger_name || "").split(",");
-    const passengersHtml = names.map((n, i) => {
-      const seat = ticket.seat_numbers?.[i];
-      if (!seat) return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`;
-      const { coach } = parseSeat(seat);
-      const cls = getCoachClass(coach, totalCoachesPdf);
-      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
-    }).join("");
+    const names = (ticket.passenger_name || "").split(",").map(n => n.trim());
+    const seats = ticket.seat_numbers || [];
+    const count = Math.max(names.length, seats.length, 1);
+    const perPrice = Number(ticket.total_amount) / count;
 
-    const stubSeat = ticket.seat_numbers?.[0] || "—";
+    const ticketsHtml = Array.from({ length: count }).map((_, i) => {
+      const seat = seats[i] || "—";
+      const name = names[i] || `Passenger ${i + 1}`;
+      const info = seats[i] ? parseSeat(seats[i]) : null;
+      const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
+      const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
+      return `
+        <div class="ticket">
+          <div class="main">
+            <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
+            <div class="route">${ticket.source || ""} → ${ticket.destination || ""}</div>
+            <div class="grid">
+              <div class="cell"><span class="label">Train</span><span class="value">${ticket.train_id || ""}</span></div>
+              <div class="cell"><span class="label">Date</span><span class="value">${ticket.travel_date}</span></div>
+              <div class="cell"><span class="label">Departure</span><span class="value">${ticket.departure_time || ""}</span></div>
+              <div class="cell"><span class="label">Arrival</span><span class="value">${ticket.arrival_time || ""}</span></div>
+            </div>
+            <div style="margin-top:14px">
+              <div class="row"><span class="label">Passenger</span><span class="value">${name}</span></div>
+              ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
+            </div>
+            <div class="seats">SEAT · ${seat}</div>
+            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
+          </div>
+          <div class="stub">
+            <div class="stub-label">Boarding Pass</div>
+            <div class="seat">${seat}</div>
+            <div class="qr"><img src="${qr}" alt="Barcode" /></div>
+            <div class="bk">${ticket.booking_id}</div>
+          </div>
+        </div>
+      `;
+    }).join('<div style="page-break-after:always"></div>');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
@@ -106,7 +134,7 @@ const TicketView = () => {
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 28px;
           background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); min-height: 100vh; }
-        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
+        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto 24px;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           border: 1px solid #B59410; border-radius: 18px;
           box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5); overflow: hidden; color: #FDFCF5; }
@@ -133,27 +161,7 @@ const TicketView = () => {
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
         @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
-      <div class="ticket">
-        <div class="main">
-          <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah</small></div>
-          <div class="route">${ticket.source || ""} → ${ticket.destination || ""}</div>
-          <div class="grid">
-            <div class="cell"><span class="label">Train</span><span class="value">${ticket.train_id || ""}</span></div>
-            <div class="cell"><span class="label">Date</span><span class="value">${ticket.travel_date}</span></div>
-            <div class="cell"><span class="label">Departure</span><span class="value">${ticket.departure_time || ""}</span></div>
-            <div class="cell"><span class="label">Arrival</span><span class="value">${ticket.arrival_time || ""}</span></div>
-          </div>
-          <div style="margin-top:14px">${passengersHtml}</div>
-          <div class="seats">SEATS · ${(ticket.seat_numbers || []).join("  ·  ")}</div>
-          <div class="total"><span class="lbl">Total Price</span><span class="amt">SAR ${Number(ticket.total_amount).toFixed(0)}</span></div>
-        </div>
-        <div class="stub">
-          <div class="stub-label">Boarding Pass</div>
-          <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${qr}" alt="Barcode" /></div>
-          <div class="bk">${ticket.booking_id}</div>
-        </div>
-      </div>
+      ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
       </body></html>
     `);
