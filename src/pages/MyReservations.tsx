@@ -411,7 +411,7 @@ const MyReservations = () => {
         </div>
 
         <Dialog open={seatDialogOpen} onOpenChange={setSeatDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Reallocate Seats</DialogTitle>
             </DialogHeader>
