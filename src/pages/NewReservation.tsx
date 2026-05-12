@@ -41,6 +41,43 @@ import { countryCodes } from "@/lib/countryCodes";
 
 type Step = "route" | "seats" | "confirm" | "ticket";
 
+const SEATS_PER_COACH = 60;
+const ROWS_PER_COACH = 10;
+const SEAT_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
+const BUSINESS_MULTIPLIER = 1.5;
+
+const getCoachCount = (totalSeats: number) =>
+  Math.max(1, Math.ceil(totalSeats / SEATS_PER_COACH));
+
+const getCoachClass = (coachNum: number, totalCoaches: number): "Business" | "Economy" => {
+  if (totalCoaches <= 2) return coachNum === 1 ? "Business" : "Economy";
+  return coachNum <= 2 ? "Business" : "Economy";
+};
+
+const seatLabel = (coach: number, row: number, letter: string) =>
+  `${String(coach).padStart(2, "0")}-${String(row).padStart(2, "0")}${letter}`;
+
+const parseSeat = (label: string) => {
+  // Supports "02-05A" (new) and legacy "A05" (older bookings) — legacy treated as economy/coach 1
+  if (label.includes("-")) {
+    const [c, rest] = label.split("-");
+    return { coach: parseInt(c, 10), row: parseInt(rest.slice(0, 2), 10), letter: rest.slice(2) };
+  }
+  return { coach: 1, row: parseInt(label.slice(1), 10) || 0, letter: label.slice(0, 1) };
+};
+
+const seatPrice = (label: string, basePrice: number, totalCoaches: number) => {
+  const { coach } = parseSeat(label);
+  return getCoachClass(coach, totalCoaches) === "Business"
+    ? basePrice * BUSINESS_MULTIPLIER
+    : basePrice;
+};
+
+const computeTotal = (seats: string[], basePrice: number, totalCoaches: number, fallbackTickets: number) => {
+  if (seats.length === 0) return basePrice * fallbackTickets;
+  return seats.reduce((sum, s) => sum + seatPrice(s, basePrice, totalCoaches), 0);
+};
+
 const validateEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 };
@@ -64,6 +101,7 @@ const NewReservation = () => {
   const [travelDate, setTravelDate] = useState<Date>();
   const [numTickets, setNumTickets] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [activeCoach, setActiveCoach] = useState(1);
   const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "" }]);
   const [contactPhone, setContactPhone] = useState("");
   const [contactCountryCode, setContactCountryCode] = useState("+966");
@@ -231,7 +269,7 @@ const NewReservation = () => {
       travel_date: format(travelDate, "yyyy-MM-dd"),
       seat_numbers: selectedSeats,
       num_tickets: numTickets,
-      total_amount: numTickets * selectedRoute.price_per_ticket,
+      total_amount: computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets),
       status: "Confirmed",
       // Bug #4 — Store booked_by employee id
       booked_by: employee?.id || null,
@@ -244,9 +282,13 @@ const NewReservation = () => {
     }
 
     // Bug #10 — Match passengers by name AND email
+    const totalCoachesForPassengers = getCoachCount(selectedRoute.total_seats);
     for (let pi = 0; pi < passengers.length; pi++) {
       const p = passengers[pi];
-      const tripAmount = selectedRoute.price_per_ticket;
+      const seatForP = selectedSeats[pi];
+      const tripAmount = seatForP
+        ? seatPrice(seatForP, selectedRoute.price_per_ticket, totalCoachesForPassengers)
+        : selectedRoute.price_per_ticket;
       const fullPhone = pi === 0 && contactPhone ? `${contactCountryCode}${contactPhone}` : undefined;
 
       const { data: existing } = await supabase
@@ -285,9 +327,16 @@ const NewReservation = () => {
   const handlePrintPDF = async () => {
     if (!selectedRoute || !travelDate) return;
 
-    const passengersHtml = passengers.map((p, i) => `
-      <div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>
-    `).join("");
+    const totalCoachesPdf = getCoachCount(selectedRoute.total_seats);
+    const passengersHtml = passengers.map((p, i) => {
+      const seat = selectedSeats[i];
+      if (!seat) {
+        return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>`;
+      }
+      const { coach } = parseSeat(seat);
+      const cls = getCoachClass(coach, totalCoachesPdf);
+      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
+    }).join("");
 
     const stubSeat = selectedSeats[0] || "—";
 
@@ -366,7 +415,7 @@ const NewReservation = () => {
           <div class="seats">SEATS · ${selectedSeats.join("  ·  ")}</div>
           <div class="total">
             <span class="lbl">Total Price</span>
-            <span class="amt">SAR ${(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span>
+            <span class="amt">SAR ${computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</span>
           </div>
         </div>
         <div class="stub">
@@ -385,73 +434,141 @@ const NewReservation = () => {
   const renderSeatMap = () => {
     if (!selectedRoute) return null;
     const totalSeats = selectedRoute.total_seats;
-    const cols = 4;
-    const rows = Math.ceil(totalSeats / cols);
-    const seatLabels: string[] = [];
-    for (let i = 1; i <= totalSeats; i++) {
-      const row = Math.ceil(i / cols);
-      const col = ((i - 1) % cols);
-      const letter = ["A", "B", "C", "D"][col];
-      seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
-    }
+    const totalCoaches = getCoachCount(totalSeats);
+    const currentCoach = Math.min(activeCoach, totalCoaches);
+    const coachClass = getCoachClass(currentCoach, totalCoaches);
+    const isBusinessCoach = coachClass === "Business";
+
+    // Seats in this coach (the last coach may be partial)
+    const coachStartIndex = (currentCoach - 1) * SEATS_PER_COACH;
+    const seatsInCoach = Math.min(SEATS_PER_COACH, totalSeats - coachStartIndex);
+    const rows = Math.ceil(seatsInCoach / SEAT_LETTERS.length);
+
+    const buildSeat = (row: number, letter: string) => {
+      const seatIdx = (row - 1) * SEAT_LETTERS.length + SEAT_LETTERS.indexOf(letter as any);
+      if (seatIdx >= seatsInCoach) return null;
+      return seatLabel(currentCoach, row, letter);
+    };
+
     return (
       <div className="space-y-4 animate-heritage-in">
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <span className="label-caps text-muted-foreground mr-2">Availability</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-available !h-4 !w-6 !rounded" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-selected !h-4 !w-6 !rounded" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-booked !h-4 !w-6 !rounded" /> Booked</span>
+        {/* Coach selector */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+          <span className="label-caps text-muted-foreground mr-2 shrink-0">Coach</span>
+          {Array.from({ length: totalCoaches }).map((_, i) => {
+            const coachNum = i + 1;
+            const cls = getCoachClass(coachNum, totalCoaches);
+            const isActive = coachNum === currentCoach;
+            const business = cls === "Business";
+            return (
+              <button
+                key={coachNum}
+                onClick={() => setActiveCoach(coachNum)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5",
+                  isActive
+                    ? business
+                      ? "bg-[#B59410] text-white border-[#8a700b] shadow-md"
+                      : "bg-secondary text-secondary-foreground border-secondary"
+                    : business
+                      ? "border-[#B59410] text-[#8a700b] bg-[#B59410]/5 hover:bg-[#B59410]/10"
+                      : "border-border bg-card hover:border-secondary/60"
+                )}
+              >
+                {business && <span aria-hidden>★</span>}
+                Coach {String(coachNum).padStart(2, "0")}
+                <span className="opacity-70 font-normal hidden sm:inline">· {cls}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="carriage rounded-3xl p-4 md:p-8 relative overflow-hidden">
+        {/* Class banner */}
+        <div className={cn(
+          "flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg border text-xs",
+          isBusinessCoach
+            ? "border-[#B59410] bg-[#B59410]/5"
+            : "border-border bg-muted/40"
+        )}>
+          <div className="flex items-center gap-2">
+            {isBusinessCoach && <span className="text-[#B59410]">★</span>}
+            <span className="font-semibold text-foreground">
+              {coachClass} Class · Coach {String(currentCoach).padStart(2, "0")}
+            </span>
+            <span className="text-muted-foreground">
+              · SAR {(selectedRoute.price_per_ticket * (isBusinessCoach ? BUSINESS_MULTIPLIER : 1)).toFixed(0)} / seat
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1.5"><span className="seat-real !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Available</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-selected !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Selected</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-booked !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Booked</span>
+          </div>
+        </div>
 
-
+        {/* Carriage */}
+        <div className={cn(
+          "carriage rounded-3xl p-4 md:p-8 relative overflow-hidden",
+          isBusinessCoach && "ring-2 ring-[#B59410]/60"
+        )}>
           <div className="flex gap-3 md:gap-5 items-stretch">
-            {/* Left side windows (porthole column) */}
+            {/* Left windows */}
             <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`lw-${i}`} className="train-window flex-1 min-h-[40px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`lw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
 
-            <div className="flex-1 grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 40px 1fr 1fr" }}>
-              {Array.from({ length: rows }).map((_, rowIdx) => {
-                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-                const renderSeat = (seat: string | undefined) => {
-                  if (!seat) return <div key={Math.random()} />;
+            {/* 3-3 seat grid: A B C [aisle] D E F */}
+            <div
+              className="flex-1 grid gap-y-3 gap-x-2"
+              style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr)) 32px repeat(3, minmax(0,1fr))" }}
+            >
+              {Array.from({ length: rows }).map((_, rIdx) => {
+                const row = rIdx + 1;
+                const renderOne = (letter: string) => {
+                  const seat = buildSeat(row, letter);
+                  if (!seat) return <div key={`empty-${row}-${letter}`} />;
                   const isBooked = bookedSeats.includes(seat);
                   const isSelected = selectedSeats.includes(seat);
                   return (
                     <button
                       key={seat}
+                      type="button"
                       onClick={() => toggleSeat(seat)}
                       disabled={isBooked}
+                      title={`${coachClass} · Seat ${String(row).padStart(2, "0")}${letter}`}
                       className={cn(
-                        "seat-btn",
-                        isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                        "seat-real mx-auto",
+                        isBusinessCoach && "seat-real-business",
+                        isBooked && "seat-real-booked",
+                        isSelected && "seat-real-selected"
                       )}
                     >
-                      <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                      <span className="relative z-10">{String(row).padStart(2, "0")}{letter}</span>
                     </button>
                   );
                 };
                 return (
-                  <div key={`row-${rowIdx}`} className="contents">
-                    {left.map(renderSeat)}
+                  <div key={`row-${row}`} className="contents">
+                    {renderOne("A")}
+                    {renderOne("B")}
+                    {renderOne("C")}
                     <div className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
-                      {rowIdx + 1}
+                      {String(row).padStart(2, "0")}
                     </div>
-                    {right.map(renderSeat)}
+                    {renderOne("D")}
+                    {renderOne("E")}
+                    {renderOne("F")}
                   </div>
                 );
               })}
             </div>
 
-            {/* Right side windows (porthole column) */}
+            {/* Right windows */}
             <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`rw-${i}`} className="train-window flex-1 min-h-[40px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`rw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
           </div>
@@ -572,7 +689,7 @@ const NewReservation = () => {
                     return (
                       <button
                         key={r.id}
-                        onClick={() => { setSelectedRoute(r); setSelectedSeats([]); }}
+                        onClick={() => { setSelectedRoute(r); setSelectedSeats([]); setActiveCoach(1); }}
                         className={cn(
                           "w-full text-left p-5 rounded-xl border transition-all",
                           selectedRoute?.id === r.id
@@ -638,7 +755,7 @@ const NewReservation = () => {
                   Selected: <span className="font-mono font-semibold text-foreground">{selectedSeats.join(", ") || "None"}</span>
                 </p>
                 <p className="text-lg font-bold text-foreground mt-1">
-                  Total: SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}
+                  Total: SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}
                 </p>
               </div>
             </div>
@@ -656,7 +773,26 @@ const NewReservation = () => {
               <h3 className="font-display font-semibold text-lg">Passenger Details</h3>
               {passengers.map((p, i) => (
                 <div key={i} className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat {selectedSeats[i] || "N/A"}</p>
+                  {(() => {
+                    const seat = selectedSeats[i];
+                    if (!seat) return <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat N/A</p>;
+                    const tc = getCoachCount(selectedRoute.total_seats);
+                    const { coach } = parseSeat(seat);
+                    const cls = getCoachClass(coach, tc);
+                    return (
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-foreground">Passenger {i + 1} — Seat {seat}</p>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                          cls === "Business"
+                            ? "border-[#B59410] bg-[#B59410]/10 text-[#8a700b]"
+                            : "border-border bg-muted text-muted-foreground"
+                        )}>
+                          {cls === "Business" && "★ "}{cls} · Coach {String(coach).padStart(2, "0")}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div className="space-y-1.5">
                     <Label>Full Name *</Label>
                     <Input value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} placeholder="e.g. Ahmed Al-Farsi" />
@@ -727,11 +863,29 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Train</span><span className="font-mono">{selectedRoute.train_id}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{travelDate ? format(travelDate, "PPP") : ""}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span>{selectedRoute.departure_time} – {selectedRoute.arrival_time}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span className="font-mono">{selectedSeats.join(", ")}</span></div>
+                {(() => {
+                  const tc = getCoachCount(selectedRoute.total_seats);
+                  return (
+                    <>
+                      {selectedSeats.map((s) => {
+                        const { coach } = parseSeat(s);
+                        const cls = getCoachClass(coach, tc);
+                        return (
+                          <div key={s} className="flex justify-between items-center">
+                            <span className="text-muted-foreground">
+                              {cls} · Coach {String(coach).padStart(2, "0")} · Seat
+                            </span>
+                            <span className="font-mono font-semibold">{s}</span>
+                          </div>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
                 <div className="flex justify-between"><span className="text-muted-foreground">Tickets</span><span>{numTickets}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
                 <div className="border-t border-border my-2" />
-                <div className="flex justify-between text-base font-bold"><span>Total</span><span>SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span></div>
+                <div className="flex justify-between text-base font-bold"><span>Total</span><span>SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</span></div>
               </div>
             </div>
 
@@ -799,11 +953,30 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Arrival</span><span>{selectedRoute.arrival_time}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
               </div>
-              <div className="bg-muted rounded-lg p-3 text-center font-mono font-bold text-foreground">
-                Seats: {selectedSeats.join(", ")}
+              <div className="bg-muted rounded-lg p-3 space-y-1.5">
+                {(() => {
+                  const tc = getCoachCount(selectedRoute.total_seats);
+                  return selectedSeats.map((s) => {
+                    const { coach } = parseSeat(s);
+                    const cls = getCoachClass(coach, tc);
+                    return (
+                      <div key={s} className="flex justify-between items-center text-sm">
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                          cls === "Business"
+                            ? "bg-[#B59410]/15 text-[#8a700b] border border-[#B59410]"
+                            : "bg-secondary/10 text-secondary border border-secondary/30"
+                        )}>
+                          {cls === "Business" && "★ "}{cls} · Coach {String(coach).padStart(2, "0")}
+                        </span>
+                        <span className="font-mono font-bold text-foreground">Seat {s}</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-secondary">SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</p>
+                <p className="text-3xl font-bold text-secondary">SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</p>
               </div>
               <div className="text-center pt-2">
                 <Badge>Confirmed</Badge>

@@ -18,7 +18,26 @@ interface TicketData {
   train_id?: string;
   departure_time?: string;
   arrival_time?: string;
+  total_seats?: number;
 }
+
+const SEATS_PER_COACH = 60;
+
+const getCoachCount = (totalSeats: number) =>
+  Math.max(1, Math.ceil((totalSeats || SEATS_PER_COACH) / SEATS_PER_COACH));
+
+const getCoachClass = (coachNum: number, totalCoaches: number): "Business" | "Economy" => {
+  if (totalCoaches <= 2) return coachNum === 1 ? "Business" : "Economy";
+  return coachNum <= 2 ? "Business" : "Economy";
+};
+
+const parseSeat = (label: string) => {
+  if (label?.includes("-")) {
+    const [c, rest] = label.split("-");
+    return { coach: parseInt(c, 10), row: parseInt(rest.slice(0, 2), 10), letter: rest.slice(2) };
+  }
+  return { coach: 1, row: parseInt((label || "").slice(1), 10) || 0, letter: (label || "").slice(0, 1) };
+};
 
 const TicketView = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -44,7 +63,7 @@ const TicketView = () => {
 
       const { data: route } = await supabase
         .from("train_routes")
-        .select("source, destination, train_id, departure_time, arrival_time")
+        .select("source, destination, train_id, departure_time, arrival_time, total_seats")
         .eq("id", (r as any).route_id)
         .maybeSingle();
 
@@ -68,10 +87,15 @@ const TicketView = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    const passengersHtml = (ticket.passenger_name || "")
-      .split(",")
-      .map((n, i) => `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`)
-      .join("");
+    const totalCoachesPdf = getCoachCount(ticket.total_seats || 0);
+    const names = (ticket.passenger_name || "").split(",");
+    const passengersHtml = names.map((n, i) => {
+      const seat = ticket.seat_numbers?.[i];
+      if (!seat) return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`;
+      const { coach } = parseSeat(seat);
+      const cls = getCoachClass(coach, totalCoachesPdf);
+      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
+    }).join("");
 
     const stubSeat = ticket.seat_numbers?.[0] || "—";
 
@@ -199,19 +223,58 @@ const TicketView = () => {
                 ))}
               </div>
 
-              <div className="mt-6 space-y-1.5">
-                {ticket.passenger_name.split(",").map((n, i) => (
-                  <div key={i} className="flex justify-between text-sm border-b border-dashed py-1.5" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
-                    <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger {i + 1}</span>
-                    <span className="font-semibold">{n.trim()}</span>
-                  </div>
-                ))}
-              </div>
+              {(() => {
+                const tc = getCoachCount(ticket.total_seats || 0);
+                const names = ticket.passenger_name.split(",");
+                return (
+                  <>
+                    <div className="mt-6 space-y-1.5">
+                      {names.map((n, i) => {
+                        const seat = ticket.seat_numbers?.[i];
+                        const info = seat ? parseSeat(seat) : null;
+                        const cls = info ? getCoachClass(info.coach, tc) : null;
+                        return (
+                          <div key={i} className="flex justify-between items-center text-sm border-b border-dashed py-1.5 gap-2 flex-wrap" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
+                            <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger {i + 1}</span>
+                            <span className="font-semibold flex items-center gap-2 flex-wrap justify-end">
+                              <span>{n.trim()}</span>
+                              {seat && (
+                                <>
+                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                                    style={{
+                                      borderColor: cls === "Business" ? "#B59410" : "rgba(245,229,184,0.4)",
+                                      color: cls === "Business" ? "#F4E9B8" : "#D4B53A",
+                                      background: cls === "Business" ? "rgba(181,148,16,0.25)" : "transparent",
+                                    }}>
+                                    {cls === "Business" && "★ "}{cls} · Coach {String(info!.coach).padStart(2, "0")}
+                                  </span>
+                                  <span className="font-mono">Seat {seat}</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-              <div className="mt-5 px-4 py-3 rounded-xl border text-center font-mono tracking-widest font-bold"
-                style={{ borderColor: "rgba(181,148,16,0.6)", color: "#F4E9B8" }}>
-                SEATS · {ticket.seat_numbers?.join("  ·  ")}
-              </div>
+                    <div className="mt-5 px-4 py-3 rounded-xl border space-y-1"
+                      style={{ borderColor: "rgba(181,148,16,0.6)", color: "#F4E9B8" }}>
+                      {(ticket.seat_numbers || []).map((s) => {
+                        const { coach } = parseSeat(s);
+                        const c = getCoachClass(coach, tc);
+                        return (
+                          <div key={s} className="flex justify-between items-center text-sm font-mono">
+                            <span style={{ color: "#D4B53A" }} className="text-[10px] tracking-widest uppercase">
+                              {c === "Business" && "★ "}{c} · Coach {String(coach).padStart(2, "0")}
+                            </span>
+                            <span className="font-bold tracking-widest">SEAT {s}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="mt-5 pt-4 border-t flex items-baseline justify-between" style={{ borderColor: "rgba(245,229,184,0.3)" }}>
                 <span className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Total Price</span>
