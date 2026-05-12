@@ -90,7 +90,14 @@ const Sidebar = () => {
 
   const LogoRow = ({ expanded, withClose }: { expanded: boolean; withClose?: boolean }) => (
     <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800 dark:border-navy-800">
-      <img src={logoImg} alt="سِـكَّـة" className="h-10 w-10 rounded-lg object-cover shrink-0" />
+      <img
+        src={logoImg}
+        alt="سِـكَّـة"
+        width={80}
+        height={80}
+        decoding="async"
+        className="h-10 w-10 rounded-lg object-contain shrink-0 [image-rendering:auto]"
+      />
       <div
         className={cn(
           "flex-1 transition-all duration-200 overflow-hidden",
@@ -151,7 +158,7 @@ const Sidebar = () => {
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={logoImg} alt="" className="h-7 w-7 rounded-md object-cover" />
+          <img src={logoImg} alt="" width={56} height={56} decoding="async" className="h-7 w-7 rounded-md object-contain" />
           <span className="font-serif text-white text-base">سِـكَّـة</span>
         </div>
         <div className="w-9" />
