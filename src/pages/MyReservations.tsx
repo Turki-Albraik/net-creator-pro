@@ -256,72 +256,136 @@ const MyReservations = () => {
   const renderSeatGrid = () => {
     if (!routeInfo) return null;
     const totalSeats = routeInfo.total_seats;
-    const cols = 4;
-    const rows = Math.ceil(totalSeats / cols);
-    const seatLabels: string[] = [];
-    for (let i = 1; i <= totalSeats; i++) {
-      const row = Math.ceil(i / cols);
-      const col = ((i - 1) % cols);
-      const letter = ["A", "B", "C", "D"][col];
-      seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
-    }
+    const totalCoaches = getCoachCount(totalSeats);
+    const currentCoach = Math.min(activeCoach, totalCoaches);
+    const coachClass = getCoachClass(currentCoach, totalCoaches);
+    const isBusinessCoach = coachClass === "Business";
+
+    const coachStartIndex = (currentCoach - 1) * SEATS_PER_COACH;
+    const seatsInCoach = Math.min(SEATS_PER_COACH, totalSeats - coachStartIndex);
+    const rows = Math.ceil(seatsInCoach / SEAT_LETTERS.length);
+
+    const buildSeat = (row: number, letter: string) => {
+      const seatIdx = (row - 1) * SEAT_LETTERS.length + SEAT_LETTERS.indexOf(letter as any);
+      if (seatIdx >= seatsInCoach) return null;
+      return seatLabel(currentCoach, row, letter);
+    };
 
     return (
       <div className="space-y-4 animate-heritage-in">
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <span className="label-caps text-muted-foreground mr-2">Availability</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-available !h-4 !w-6 !rounded" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-selected !h-4 !w-6 !rounded" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-booked !h-4 !w-6 !rounded" /> Booked</span>
+        {/* Coach selector */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+          <span className="label-caps text-muted-foreground mr-2 shrink-0">Coach</span>
+          {Array.from({ length: totalCoaches }).map((_, i) => {
+            const coachNum = i + 1;
+            const cls = getCoachClass(coachNum, totalCoaches);
+            const isActive = coachNum === currentCoach;
+            const business = cls === "Business";
+            return (
+              <button
+                key={coachNum}
+                onClick={() => setActiveCoach(coachNum)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5",
+                  isActive
+                    ? business
+                      ? "bg-[#B59410] text-white border-[#8a700b] shadow-md"
+                      : "bg-secondary text-secondary-foreground border-secondary"
+                    : business
+                      ? "border-[#B59410] text-[#8a700b] bg-[#B59410]/5 hover:bg-[#B59410]/10"
+                      : "border-border bg-card hover:border-secondary/60"
+                )}
+              >
+                {business && <span aria-hidden>★</span>}
+                Coach {String(coachNum).padStart(2, "0")}
+                <span className="opacity-70 font-normal hidden sm:inline">· {cls}</span>
+                <span className="opacity-80 font-normal">· SAR {(routeInfo.price_per_ticket * (business ? BUSINESS_MULTIPLIER : 1)).toFixed(0)}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="carriage rounded-3xl p-4 md:p-6 relative overflow-hidden">
+        {/* Class banner */}
+        <div className={cn(
+          "flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg border text-xs",
+          isBusinessCoach ? "border-[#B59410] bg-[#B59410]/5" : "border-border bg-muted/40"
+        )}>
+          <div className="flex items-center gap-2">
+            {isBusinessCoach && <span className="text-[#B59410]">★</span>}
+            <span className="font-semibold text-foreground">
+              {coachClass} Class · Coach {String(currentCoach).padStart(2, "0")}
+            </span>
+            <span className="text-muted-foreground">
+              · SAR {(routeInfo.price_per_ticket * (isBusinessCoach ? BUSINESS_MULTIPLIER : 1)).toFixed(0)} / seat
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1.5"><span className="seat-real !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Available</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-selected !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Selected</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-booked !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Booked</span>
+          </div>
+        </div>
+
+        {/* Carriage */}
+        <div className={cn(
+          "carriage rounded-3xl p-4 md:p-8 relative overflow-hidden",
+          isBusinessCoach && "ring-2 ring-[#B59410]/60"
+        )}>
           <div className="flex gap-3 md:gap-5 items-stretch">
-            {/* Left windows */}
-            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`lw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`lw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
 
-            <div className="flex-1 grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 36px 1fr 1fr" }}>
-              {Array.from({ length: rows }).map((_, rowIdx) => {
-                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-                const renderSeat = (seat: string | undefined) => {
-                  if (!seat) return <div key={Math.random()} />;
+            <div
+              className="flex-1 grid gap-y-3 gap-x-2"
+              style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr)) 32px repeat(3, minmax(0,1fr))" }}
+            >
+              {Array.from({ length: rows }).map((_, rIdx) => {
+                const row = rIdx + 1;
+                const renderOne = (letter: string) => {
+                  const seat = buildSeat(row, letter);
+                  if (!seat) return <div key={`empty-${row}-${letter}`} />;
                   const isBooked = bookedSeats.includes(seat);
                   const isSelected = newSeats.includes(seat);
                   return (
                     <button
                       key={seat}
+                      type="button"
                       onClick={() => toggleSeat(seat)}
                       disabled={isBooked}
+                      title={`${coachClass} · Seat ${String(row).padStart(2, "0")}${letter}`}
                       className={cn(
-                        "seat-btn",
-                        isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                        "seat-real mx-auto",
+                        isBusinessCoach && "seat-real-business",
+                        isBooked && "seat-real-booked",
+                        isSelected && "seat-real-selected"
                       )}
                     >
-                      <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                      <span className="relative z-10">{String(row).padStart(2, "0")}{letter}</span>
                     </button>
                   );
                 };
                 return (
-                  <div key={`row-${rowIdx}`} className="contents">
-                    {left.map(renderSeat)}
+                  <div key={`row-${row}`} className="contents">
+                    {renderOne("A")}
+                    {renderOne("B")}
+                    {renderOne("C")}
                     <div className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
-                      {rowIdx + 1}
+                      {String(row).padStart(2, "0")}
                     </div>
-                    {right.map(renderSeat)}
+                    {renderOne("D")}
+                    {renderOne("E")}
+                    {renderOne("F")}
                   </div>
                 );
               })}
             </div>
 
-            {/* Right windows */}
-            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`rw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`rw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
           </div>
