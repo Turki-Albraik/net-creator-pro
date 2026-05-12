@@ -189,6 +189,7 @@ const NewReservation = () => {
     )
     .sort((a, b) => {
       if (sortBy === "price") return a.price_per_ticket - b.price_per_ticket;
+      if (sortBy === "price_desc") return b.price_per_ticket - a.price_per_ticket;
       return a.departure_time.localeCompare(b.departure_time);
     });
 
