@@ -709,8 +709,15 @@ const NewReservation = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-lg text-foreground">SAR {r.price_per_ticket}</p>
-                            <p className="text-xs text-muted-foreground">per ticket</p>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <p className="text-xs font-semibold text-[#8a700b] flex items-center gap-1">
+                                <span aria-hidden>★</span> Business: SAR {(r.price_per_ticket * BUSINESS_MULTIPLIER).toFixed(0)}
+                              </p>
+                              <p className="text-xs font-semibold text-muted-foreground">
+                                Economy: SAR {r.price_per_ticket}
+                              </p>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">per ticket</p>
                           </div>
                         </div>
                         <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
