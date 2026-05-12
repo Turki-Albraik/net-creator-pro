@@ -478,6 +478,7 @@ const NewReservation = () => {
                 {business && <span aria-hidden>★</span>}
                 Coach {String(coachNum).padStart(2, "0")}
                 <span className="opacity-70 font-normal hidden sm:inline">· {cls}</span>
+                <span className="opacity-80 font-normal">· SAR {(selectedRoute.price_per_ticket * (business ? BUSINESS_MULTIPLIER : 1)).toFixed(0)}</span>
               </button>
             );
           })}
