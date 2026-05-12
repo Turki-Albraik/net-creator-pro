@@ -86,6 +86,7 @@ const MyReservations = () => {
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [newSeats, setNewSeats] = useState<string[]>([]);
   const [routeInfo, setRouteInfo] = useState<TrainRoute | null>(null);
+  const [activeCoach, setActiveCoach] = useState(1);
   const [presentOpen, setPresentOpen] = useState(false);
   const [presentRes, setPresentRes] = useState<Reservation | null>(null);
   const [presentQr, setPresentQr] = useState<string>("");
