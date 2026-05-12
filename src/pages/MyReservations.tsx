@@ -289,9 +289,11 @@ const MyReservations = () => {
             <h1 className="font-display text-2xl font-bold text-foreground">My Reservations</h1>
             <p className="text-sm text-muted-foreground mt-1">View and manage your bookings</p>
           </div>
-          <Button className="gap-2" onClick={() => navigate("/reservations/new")}>
-            <Plus className="h-4 w-4" /> New Reservation
-          </Button>
+          {reservations.length > 0 && (
+            <Button className="gap-2" onClick={() => navigate("/reservations/new")}>
+              <Plus className="h-4 w-4" /> New Reservation
+            </Button>
+          )}
         </div>
 
         <Dialog open={seatDialogOpen} onOpenChange={setSeatDialogOpen}>
