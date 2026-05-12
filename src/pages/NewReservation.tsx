@@ -773,7 +773,7 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Tickets</span><span>{numTickets}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
                 <div className="border-t border-border my-2" />
-                <div className="flex justify-between text-base font-bold"><span>Total</span><span>SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</span></div>
+                <div className="flex justify-between text-base font-bold"><span>Total</span><span>SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</span></div>
               </div>
             </div>
 
