@@ -1,8 +1,7 @@
-import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History, X } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, Menu, User, History, X } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logoImg from "@/assets/logo.png";
 
