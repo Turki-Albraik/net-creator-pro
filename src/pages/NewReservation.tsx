@@ -845,7 +845,7 @@ const NewReservation = () => {
                 Seats: {selectedSeats.join(", ")}
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-secondary">SAR {(numTickets * selectedRoute.price_per_ticket).toFixed(0)}</p>
+                <p className="text-3xl font-bold text-secondary">SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</p>
               </div>
               <div className="text-center pt-2">
                 <Badge>Confirmed</Badge>
