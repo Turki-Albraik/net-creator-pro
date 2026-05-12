@@ -269,7 +269,7 @@ const NewReservation = () => {
       travel_date: format(travelDate, "yyyy-MM-dd"),
       seat_numbers: selectedSeats,
       num_tickets: numTickets,
-      total_amount: numTickets * selectedRoute.price_per_ticket,
+      total_amount: computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets),
       status: "Confirmed",
       // Bug #4 — Store booked_by employee id
       booked_by: employee?.id || null,
