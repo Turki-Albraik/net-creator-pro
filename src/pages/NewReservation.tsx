@@ -101,6 +101,7 @@ const NewReservation = () => {
   const [travelDate, setTravelDate] = useState<Date>();
   const [numTickets, setNumTickets] = useState(1);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [activeCoach, setActiveCoach] = useState(1);
   const [passengers, setPassengers] = useState<PassengerInfo[]>([{ name: "", email: "" }]);
   const [contactPhone, setContactPhone] = useState("");
   const [contactCountryCode, setContactCountryCode] = useState("+966");
