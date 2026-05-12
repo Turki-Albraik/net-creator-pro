@@ -41,6 +41,43 @@ import { countryCodes } from "@/lib/countryCodes";
 
 type Step = "route" | "seats" | "confirm" | "ticket";
 
+const SEATS_PER_COACH = 60;
+const ROWS_PER_COACH = 10;
+const SEAT_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
+const BUSINESS_MULTIPLIER = 1.5;
+
+const getCoachCount = (totalSeats: number) =>
+  Math.max(1, Math.ceil(totalSeats / SEATS_PER_COACH));
+
+const getCoachClass = (coachNum: number, totalCoaches: number): "Business" | "Economy" => {
+  if (totalCoaches <= 2) return coachNum === 1 ? "Business" : "Economy";
+  return coachNum <= 2 ? "Business" : "Economy";
+};
+
+const seatLabel = (coach: number, row: number, letter: string) =>
+  `${String(coach).padStart(2, "0")}-${String(row).padStart(2, "0")}${letter}`;
+
+const parseSeat = (label: string) => {
+  // Supports "02-05A" (new) and legacy "A05" (older bookings) — legacy treated as economy/coach 1
+  if (label.includes("-")) {
+    const [c, rest] = label.split("-");
+    return { coach: parseInt(c, 10), row: parseInt(rest.slice(0, 2), 10), letter: rest.slice(2) };
+  }
+  return { coach: 1, row: parseInt(label.slice(1), 10) || 0, letter: label.slice(0, 1) };
+};
+
+const seatPrice = (label: string, basePrice: number, totalCoaches: number) => {
+  const { coach } = parseSeat(label);
+  return getCoachClass(coach, totalCoaches) === "Business"
+    ? basePrice * BUSINESS_MULTIPLIER
+    : basePrice;
+};
+
+const computeTotal = (seats: string[], basePrice: number, totalCoaches: number, fallbackTickets: number) => {
+  if (seats.length === 0) return basePrice * fallbackTickets;
+  return seats.reduce((sum, s) => sum + seatPrice(s, basePrice, totalCoaches), 0);
+};
+
 const validateEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 };
