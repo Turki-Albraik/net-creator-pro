@@ -32,7 +32,43 @@ interface Reservation {
 interface TrainRoute {
   id: string;
   total_seats: number;
+  price_per_ticket: number;
 }
+
+const SEATS_PER_COACH = 60;
+const SEAT_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
+const BUSINESS_MULTIPLIER = 1.5;
+
+const getCoachCount = (totalSeats: number) =>
+  Math.max(1, Math.ceil(totalSeats / SEATS_PER_COACH));
+
+const getCoachClass = (coachNum: number, totalCoaches: number): "Business" | "Economy" => {
+  if (totalCoaches <= 2) return coachNum === 1 ? "Business" : "Economy";
+  return coachNum <= 2 ? "Business" : "Economy";
+};
+
+const seatLabel = (coach: number, row: number, letter: string) =>
+  `${String(coach).padStart(2, "0")}-${String(row).padStart(2, "0")}${letter}`;
+
+const parseSeat = (label: string) => {
+  if (label.includes("-")) {
+    const [c, rest] = label.split("-");
+    return { coach: parseInt(c, 10), row: parseInt(rest.slice(0, 2), 10), letter: rest.slice(2) };
+  }
+  return { coach: 1, row: parseInt(label.slice(1), 10) || 0, letter: label.slice(0, 1) };
+};
+
+const seatPrice = (label: string, basePrice: number, totalCoaches: number) => {
+  const { coach } = parseSeat(label);
+  return getCoachClass(coach, totalCoaches) === "Business"
+    ? basePrice * BUSINESS_MULTIPLIER
+    : basePrice;
+};
+
+const computeTotal = (seats: string[], basePrice: number, totalCoaches: number, fallbackTickets: number) => {
+  if (seats.length === 0) return basePrice * fallbackTickets;
+  return seats.reduce((sum, s) => sum + seatPrice(s, basePrice, totalCoaches), 0);
+};
 
 const statusColor = (s: string) => {
   if (s === "Confirmed") return "default" as const;
@@ -50,6 +86,7 @@ const MyReservations = () => {
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [newSeats, setNewSeats] = useState<string[]>([]);
   const [routeInfo, setRouteInfo] = useState<TrainRoute | null>(null);
+  const [activeCoach, setActiveCoach] = useState(1);
   const [presentOpen, setPresentOpen] = useState(false);
   const [presentRes, setPresentRes] = useState<Reservation | null>(null);
   const [presentQr, setPresentQr] = useState<string>("");
@@ -144,13 +181,22 @@ const MyReservations = () => {
   const openSeatReallocation = async (res: Reservation) => {
     setSelectedRes(res);
     setNewSeats([...res.seat_numbers]);
+    setActiveCoach(1);
 
     const { data: route } = await supabase
       .from("train_routes")
-      .select("id, total_seats")
+      .select("id, total_seats, price_per_ticket")
       .eq("id", res.route_id)
       .single();
-    if (route) setRouteInfo(route as unknown as TrainRoute);
+    if (route) {
+      setRouteInfo(route as unknown as TrainRoute);
+      // Default to coach of the first existing seat
+      const first = res.seat_numbers?.[0];
+      if (first) {
+        const { coach } = parseSeat(first);
+        setActiveCoach(Math.min(coach, getCoachCount((route as any).total_seats)));
+      }
+    }
 
     const { data } = await supabase
       .from("reservations")
@@ -178,9 +224,13 @@ const MyReservations = () => {
 
   const handleSaveSeatChange = async () => {
     if (!selectedRes || newSeats.length !== selectedRes.num_tickets) return;
+    const totalCoaches = routeInfo ? getCoachCount(routeInfo.total_seats) : 1;
+    const newTotal = routeInfo
+      ? computeTotal(newSeats, routeInfo.price_per_ticket, totalCoaches, selectedRes.num_tickets)
+      : selectedRes.total_amount;
     const { error } = await supabase
       .from("reservations")
-      .update({ seat_numbers: newSeats } as any)
+      .update({ seat_numbers: newSeats, total_amount: newTotal } as any)
       .eq("id", selectedRes.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -206,72 +256,136 @@ const MyReservations = () => {
   const renderSeatGrid = () => {
     if (!routeInfo) return null;
     const totalSeats = routeInfo.total_seats;
-    const cols = 4;
-    const rows = Math.ceil(totalSeats / cols);
-    const seatLabels: string[] = [];
-    for (let i = 1; i <= totalSeats; i++) {
-      const row = Math.ceil(i / cols);
-      const col = ((i - 1) % cols);
-      const letter = ["A", "B", "C", "D"][col];
-      seatLabels.push(`${letter}${String(row).padStart(2, "0")}`);
-    }
+    const totalCoaches = getCoachCount(totalSeats);
+    const currentCoach = Math.min(activeCoach, totalCoaches);
+    const coachClass = getCoachClass(currentCoach, totalCoaches);
+    const isBusinessCoach = coachClass === "Business";
+
+    const coachStartIndex = (currentCoach - 1) * SEATS_PER_COACH;
+    const seatsInCoach = Math.min(SEATS_PER_COACH, totalSeats - coachStartIndex);
+    const rows = Math.ceil(seatsInCoach / SEAT_LETTERS.length);
+
+    const buildSeat = (row: number, letter: string) => {
+      const seatIdx = (row - 1) * SEAT_LETTERS.length + SEAT_LETTERS.indexOf(letter as any);
+      if (seatIdx >= seatsInCoach) return null;
+      return seatLabel(currentCoach, row, letter);
+    };
 
     return (
       <div className="space-y-4 animate-heritage-in">
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <span className="label-caps text-muted-foreground mr-2">Availability</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-available !h-4 !w-6 !rounded" /> Available</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-selected !h-4 !w-6 !rounded" /> Selected</span>
-          <span className="flex items-center gap-1.5"><span className="seat-btn seat-booked !h-4 !w-6 !rounded" /> Booked</span>
+        {/* Coach selector */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+          <span className="label-caps text-muted-foreground mr-2 shrink-0">Coach</span>
+          {Array.from({ length: totalCoaches }).map((_, i) => {
+            const coachNum = i + 1;
+            const cls = getCoachClass(coachNum, totalCoaches);
+            const isActive = coachNum === currentCoach;
+            const business = cls === "Business";
+            return (
+              <button
+                key={coachNum}
+                onClick={() => setActiveCoach(coachNum)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5",
+                  isActive
+                    ? business
+                      ? "bg-[#B59410] text-white border-[#8a700b] shadow-md"
+                      : "bg-secondary text-secondary-foreground border-secondary"
+                    : business
+                      ? "border-[#B59410] text-[#8a700b] bg-[#B59410]/5 hover:bg-[#B59410]/10"
+                      : "border-border bg-card hover:border-secondary/60"
+                )}
+              >
+                {business && <span aria-hidden>★</span>}
+                Coach {String(coachNum).padStart(2, "0")}
+                <span className="opacity-70 font-normal hidden sm:inline">· {cls}</span>
+                <span className="opacity-80 font-normal">· SAR {(routeInfo.price_per_ticket * (business ? BUSINESS_MULTIPLIER : 1)).toFixed(0)}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="carriage rounded-3xl p-4 md:p-6 relative overflow-hidden">
+        {/* Class banner */}
+        <div className={cn(
+          "flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg border text-xs",
+          isBusinessCoach ? "border-[#B59410] bg-[#B59410]/5" : "border-border bg-muted/40"
+        )}>
+          <div className="flex items-center gap-2">
+            {isBusinessCoach && <span className="text-[#B59410]">★</span>}
+            <span className="font-semibold text-foreground">
+              {coachClass} Class · Coach {String(currentCoach).padStart(2, "0")}
+            </span>
+            <span className="text-muted-foreground">
+              · SAR {(routeInfo.price_per_ticket * (isBusinessCoach ? BUSINESS_MULTIPLIER : 1)).toFixed(0)} / seat
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1.5"><span className="seat-real !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Available</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-selected !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Selected</span>
+            <span className="flex items-center gap-1.5"><span className="seat-real seat-real-booked !w-4 !h-5 !rounded-md before:!hidden after:!hidden" /> Booked</span>
+          </div>
+        </div>
+
+        {/* Carriage */}
+        <div className={cn(
+          "carriage rounded-3xl p-4 md:p-8 relative overflow-hidden",
+          isBusinessCoach && "ring-2 ring-[#B59410]/60"
+        )}>
           <div className="flex gap-3 md:gap-5 items-stretch">
-            {/* Left windows */}
-            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`lw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`lw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
 
-            <div className="flex-1 grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr 36px 1fr 1fr" }}>
-              {Array.from({ length: rows }).map((_, rowIdx) => {
-                const left = [seatLabels[rowIdx * cols], seatLabels[rowIdx * cols + 1]];
-                const right = [seatLabels[rowIdx * cols + 2], seatLabels[rowIdx * cols + 3]].filter(Boolean);
-                const renderSeat = (seat: string | undefined) => {
-                  if (!seat) return <div key={Math.random()} />;
+            <div
+              className="flex-1 grid gap-y-3 gap-x-2"
+              style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr)) 32px repeat(3, minmax(0,1fr))" }}
+            >
+              {Array.from({ length: rows }).map((_, rIdx) => {
+                const row = rIdx + 1;
+                const renderOne = (letter: string) => {
+                  const seat = buildSeat(row, letter);
+                  if (!seat) return <div key={`empty-${row}-${letter}`} />;
                   const isBooked = bookedSeats.includes(seat);
                   const isSelected = newSeats.includes(seat);
                   return (
                     <button
                       key={seat}
+                      type="button"
                       onClick={() => toggleSeat(seat)}
                       disabled={isBooked}
+                      title={`${coachClass} · Seat ${String(row).padStart(2, "0")}${letter}`}
                       className={cn(
-                        "seat-btn",
-                        isBooked ? "seat-booked" : isSelected ? "seat-selected" : "seat-available"
+                        "seat-real mx-auto",
+                        isBusinessCoach && "seat-real-business",
+                        isBooked && "seat-real-booked",
+                        isSelected && "seat-real-selected"
                       )}
                     >
-                      <span className="relative z-10">{isSelected ? "✓ " : ""}{seat}</span>
+                      <span className="relative z-10">{String(row).padStart(2, "0")}{letter}</span>
                     </button>
                   );
                 };
                 return (
-                  <div key={`row-${rowIdx}`} className="contents">
-                    {left.map(renderSeat)}
+                  <div key={`row-${row}`} className="contents">
+                    {renderOne("A")}
+                    {renderOne("B")}
+                    {renderOne("C")}
                     <div className="flex items-center justify-center text-foreground/30 text-[10px] label-caps">
-                      {rowIdx + 1}
+                      {String(row).padStart(2, "0")}
                     </div>
-                    {right.map(renderSeat)}
+                    {renderOne("D")}
+                    {renderOne("E")}
+                    {renderOne("F")}
                   </div>
                 );
               })}
             </div>
 
-            {/* Right windows */}
-            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-12 py-1">
+            <div className="hidden sm:flex flex-col gap-2 w-10 md:w-14 py-1">
               {Array.from({ length: rows }).map((_, i) => (
-                <div key={`rw-${i}`} className="train-window flex-1 min-h-[36px] rounded-xl border border-white/50 shadow-inner" />
+                <div key={`rw-${i}`} className="train-window flex-1 min-h-[52px] rounded-xl border border-white/50 shadow-inner" />
               ))}
             </div>
           </div>
@@ -297,7 +411,7 @@ const MyReservations = () => {
         </div>
 
         <Dialog open={seatDialogOpen} onOpenChange={setSeatDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-xl">Reallocate Seats</DialogTitle>
             </DialogHeader>
