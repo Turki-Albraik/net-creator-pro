@@ -946,8 +946,27 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Arrival</span><span>{selectedRoute.arrival_time}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
               </div>
-              <div className="bg-muted rounded-lg p-3 text-center font-mono font-bold text-foreground">
-                Seats: {selectedSeats.join(", ")}
+              <div className="bg-muted rounded-lg p-3 space-y-1.5">
+                {(() => {
+                  const tc = getCoachCount(selectedRoute.total_seats);
+                  return selectedSeats.map((s) => {
+                    const { coach } = parseSeat(s);
+                    const cls = getCoachClass(coach, tc);
+                    return (
+                      <div key={s} className="flex justify-between items-center text-sm">
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                          cls === "Business"
+                            ? "bg-[#B59410]/15 text-[#8a700b] border border-[#B59410]"
+                            : "bg-secondary/10 text-secondary border border-secondary/30"
+                        )}>
+                          {cls === "Business" && "★ "}{cls} · Coach {String(coach).padStart(2, "0")}
+                        </span>
+                        <span className="font-mono font-bold text-foreground">Seat {s}</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-secondary">SAR {computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</p>
