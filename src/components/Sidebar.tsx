@@ -1,8 +1,7 @@
-import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, LogOut, Menu, User, History, X } from "lucide-react";
+import { LayoutDashboard, CalendarClock, Users, TicketCheck, BarChart3, Settings, UserCog, Menu, User, History, X } from "lucide-react";
 import { NavLink as RouterNavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import logoImg from "@/assets/logo.png";
 
@@ -89,19 +88,30 @@ const Sidebar = () => {
   };
 
   const LogoRow = ({ expanded, withClose }: { expanded: boolean; withClose?: boolean }) => (
-    <div className="flex items-center gap-3 px-3 py-5 border-b border-forest-800 dark:border-navy-800">
-      <img
-        src={logoImg}
-        alt="سِـكَّـة"
-        width={80}
-        height={80}
-        decoding="async"
-        className="h-10 w-10 rounded-lg object-contain shrink-0 [image-rendering:auto]"
-      />
+    <div
+      className={cn(
+        "flex items-center py-5 border-b border-forest-800 dark:border-navy-800",
+        expanded ? "gap-3 px-3 justify-start" : "px-2 justify-center"
+      )}
+    >
+      {expanded ? (
+        <img
+          src={logoImg}
+          alt="سِـكَّـة"
+          width={80}
+          height={80}
+          decoding="async"
+          className="h-10 w-10 rounded-lg object-contain shrink-0 [image-rendering:auto]"
+        />
+      ) : (
+        <div className="h-11 w-11 shrink-0 rounded-xl border border-amber-brand/25 bg-forest-900 dark:bg-navy-900 flex items-center justify-center shadow-sm shadow-black/15">
+          <span className="font-serif text-sm leading-none text-amber-brand">سك</span>
+        </div>
+      )}
       <div
         className={cn(
-          "flex-1 transition-all duration-200 overflow-hidden",
-          expanded ? "opacity-100" : "opacity-0 w-0"
+          "transition-all duration-200 overflow-hidden",
+          expanded ? "flex-1 opacity-100" : "w-0 opacity-0 pointer-events-none"
         )}
       >
         <h1 className="font-serif text-lg text-white leading-tight">سِـكَّـة</h1>
