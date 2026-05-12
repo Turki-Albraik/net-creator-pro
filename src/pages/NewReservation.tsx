@@ -327,9 +327,16 @@ const NewReservation = () => {
   const handlePrintPDF = async () => {
     if (!selectedRoute || !travelDate) return;
 
-    const passengersHtml = passengers.map((p, i) => `
-      <div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>
-    `).join("");
+    const totalCoachesPdf = getCoachCount(selectedRoute.total_seats);
+    const passengersHtml = passengers.map((p, i) => {
+      const seat = selectedSeats[i];
+      if (!seat) {
+        return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>`;
+      }
+      const { coach } = parseSeat(seat);
+      const cls = getCoachClass(coach, totalCoachesPdf);
+      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
+    }).join("");
 
     const stubSeat = selectedSeats[0] || "—";
 
