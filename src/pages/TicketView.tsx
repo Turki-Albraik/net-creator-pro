@@ -223,19 +223,58 @@ const TicketView = () => {
                 ))}
               </div>
 
-              <div className="mt-6 space-y-1.5">
-                {ticket.passenger_name.split(",").map((n, i) => (
-                  <div key={i} className="flex justify-between text-sm border-b border-dashed py-1.5" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
-                    <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger {i + 1}</span>
-                    <span className="font-semibold">{n.trim()}</span>
-                  </div>
-                ))}
-              </div>
+              {(() => {
+                const tc = getCoachCount(ticket.total_seats || 0);
+                const names = ticket.passenger_name.split(",");
+                return (
+                  <>
+                    <div className="mt-6 space-y-1.5">
+                      {names.map((n, i) => {
+                        const seat = ticket.seat_numbers?.[i];
+                        const info = seat ? parseSeat(seat) : null;
+                        const cls = info ? getCoachClass(info.coach, tc) : null;
+                        return (
+                          <div key={i} className="flex justify-between items-center text-sm border-b border-dashed py-1.5 gap-2 flex-wrap" style={{ borderColor: "rgba(245,229,184,0.25)" }}>
+                            <span className="text-[10px] tracking-widest uppercase" style={{ color: "#D4B53A" }}>Passenger {i + 1}</span>
+                            <span className="font-semibold flex items-center gap-2 flex-wrap justify-end">
+                              <span>{n.trim()}</span>
+                              {seat && (
+                                <>
+                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                                    style={{
+                                      borderColor: cls === "Business" ? "#B59410" : "rgba(245,229,184,0.4)",
+                                      color: cls === "Business" ? "#F4E9B8" : "#D4B53A",
+                                      background: cls === "Business" ? "rgba(181,148,16,0.25)" : "transparent",
+                                    }}>
+                                    {cls === "Business" && "★ "}{cls} · Coach {String(info!.coach).padStart(2, "0")}
+                                  </span>
+                                  <span className="font-mono">Seat {seat}</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-              <div className="mt-5 px-4 py-3 rounded-xl border text-center font-mono tracking-widest font-bold"
-                style={{ borderColor: "rgba(181,148,16,0.6)", color: "#F4E9B8" }}>
-                SEATS · {ticket.seat_numbers?.join("  ·  ")}
-              </div>
+                    <div className="mt-5 px-4 py-3 rounded-xl border space-y-1"
+                      style={{ borderColor: "rgba(181,148,16,0.6)", color: "#F4E9B8" }}>
+                      {(ticket.seat_numbers || []).map((s) => {
+                        const { coach } = parseSeat(s);
+                        const c = getCoachClass(coach, tc);
+                        return (
+                          <div key={s} className="flex justify-between items-center text-sm font-mono">
+                            <span style={{ color: "#D4B53A" }} className="text-[10px] tracking-widest uppercase">
+                              {c === "Business" && "★ "}{c} · Coach {String(coach).padStart(2, "0")}
+                            </span>
+                            <span className="font-bold tracking-widest">SEAT {s}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="mt-5 pt-4 border-t flex items-baseline justify-between" style={{ borderColor: "rgba(245,229,184,0.3)" }}>
                 <span className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Total Price</span>
