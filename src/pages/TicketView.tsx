@@ -63,7 +63,7 @@ const TicketView = () => {
 
       const { data: route } = await supabase
         .from("train_routes")
-        .select("source, destination, train_id, departure_time, arrival_time")
+        .select("source, destination, train_id, departure_time, arrival_time, total_seats")
         .eq("id", (r as any).route_id)
         .maybeSingle();
 
