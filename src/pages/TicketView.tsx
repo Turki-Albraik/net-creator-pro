@@ -87,10 +87,15 @@ const TicketView = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    const passengersHtml = (ticket.passenger_name || "")
-      .split(",")
-      .map((n, i) => `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`)
-      .join("");
+    const totalCoachesPdf = getCoachCount(ticket.total_seats || 0);
+    const names = (ticket.passenger_name || "").split(",");
+    const passengersHtml = names.map((n, i) => {
+      const seat = ticket.seat_numbers?.[i];
+      if (!seat) return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()}</span></div>`;
+      const { coach } = parseSeat(seat);
+      const cls = getCoachClass(coach, totalCoachesPdf);
+      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${n.trim()} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
+    }).join("");
 
     const stubSeat = ticket.seat_numbers?.[0] || "—";
 
