@@ -114,7 +114,7 @@ const NewReservation = () => {
 
   const [sourceFilter, setSourceFilter] = useState("");
   const [destFilter, setDestFilter] = useState("");
-  const [sortBy, setSortBy] = useState<"price" | "departure">("departure");
+  const [sortBy, setSortBy] = useState<"price" | "price_desc" | "departure">("departure");
 
   useEffect(() => {
     const fetchRoutes = async () => {
