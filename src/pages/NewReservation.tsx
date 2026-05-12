@@ -856,7 +856,25 @@ const NewReservation = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Train</span><span className="font-mono">{selectedRoute.train_id}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{travelDate ? format(travelDate, "PPP") : ""}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span>{selectedRoute.departure_time} – {selectedRoute.arrival_time}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span className="font-mono">{selectedSeats.join(", ")}</span></div>
+                {(() => {
+                  const tc = getCoachCount(selectedRoute.total_seats);
+                  return (
+                    <>
+                      {selectedSeats.map((s) => {
+                        const { coach } = parseSeat(s);
+                        const cls = getCoachClass(coach, tc);
+                        return (
+                          <div key={s} className="flex justify-between items-center">
+                            <span className="text-muted-foreground">
+                              {cls} · Coach {String(coach).padStart(2, "0")} · Seat
+                            </span>
+                            <span className="font-mono font-semibold">{s}</span>
+                          </div>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
                 <div className="flex justify-between"><span className="text-muted-foreground">Tickets</span><span>{numTickets}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span>{paymentMethod}</span></div>
                 <div className="border-t border-border my-2" />
