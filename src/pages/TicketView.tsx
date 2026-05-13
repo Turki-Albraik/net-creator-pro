@@ -118,7 +118,7 @@ const TicketView = () => {
               ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
             </div>
             <div class="seats">SEAT · ${seat}</div>
-            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
+            
           </div>
           <div class="stub">
             <div class="stub-label">Boarding Pass</div>
@@ -277,14 +277,6 @@ const TicketView = () => {
                       <span className="font-bold tracking-widest font-mono">{seat || "—"}</span>
                     </div>
 
-                    <div className="mt-5 pt-4 border-t flex items-baseline justify-between" style={{ borderColor: "rgba(245,229,184,0.3)" }}>
-                      <span className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>
-                        {count > 1 ? "Price" : "Total Price"}
-                      </span>
-                      <span className="font-display text-3xl font-bold" style={{ color: "#F4E9B8" }}>
-                        SAR {perPrice.toFixed(0)}
-                      </span>
-                    </div>
                   </div>
 
                   <div className="p-6 text-center border-t md:border-t-0 md:border-l border-dashed flex flex-col items-center justify-center" style={{ borderColor: "rgba(245,229,184,0.55)" }}>
