@@ -998,11 +998,47 @@ const NewReservation = () => {
               <Button variant="outline" onClick={() => navigate("/reservations")}>
                 Back to Reservations
               </Button>
-              <Button onClick={handlePrintPDF}>
+              <Button onClick={() => setPrintPickerOpen(true)}>
                 <Download className="h-4 w-4 mr-2" />
-                Download / Print Ticket
+                {numTickets > 1 ? "Download / Print Tickets" : "Download / Print Ticket"}
               </Button>
             </div>
+
+            <Dialog open={printPickerOpen} onOpenChange={setPrintPickerOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-xl">Select passenger</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Choose which boarding pass to download.
+                </p>
+                <div className="grid gap-2 mt-2">
+                  {Array.from({ length: Math.max(passengers.length, selectedSeats.length, 1) }).map((_, i) => {
+                    const name = passengers[i]?.name || `Passenger ${i + 1}`;
+                    const seat = selectedSeats[i] || "—";
+                    return (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        className="justify-between h-auto py-3"
+                        onClick={() => { setPrintPickerOpen(false); handlePrintPDF(i); }}
+                      >
+                        <span className="font-semibold">Passenger {i + 1} · {name}</span>
+                        <span className="font-mono text-xs opacity-70">Seat {seat}</span>
+                      </Button>
+                    );
+                  })}
+                  {Math.max(passengers.length, selectedSeats.length, 1) > 1 && (
+                    <Button
+                      className="mt-2"
+                      onClick={() => { setPrintPickerOpen(false); handlePrintPDF("all"); }}
+                    >
+                      Download all boarding passes
+                    </Button>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </main>
