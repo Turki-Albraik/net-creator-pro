@@ -93,7 +93,7 @@ const TicketView = () => {
     const names = (ticket.passenger_name || "").split(",").map(n => n.trim());
     const seats = ticket.seat_numbers || [];
     const count = Math.max(names.length, seats.length, 1);
-    const perPrice = Number(ticket.total_amount) / count;
+    const perPrice = count > 0 ? Number(ticket.total_amount) / count : Number(ticket.total_amount);
     const indices = onlyIdx === "all" ? Array.from({ length: count }, (_, i) => i) : [onlyIdx];
 
     const ticketsHtml = indices.map((i) => {
