@@ -126,7 +126,7 @@ const TicketView = () => {
             <div class="qr"><img src="${qr}" alt="Barcode" /></div>
             <div class="bk">${ticket.booking_id}</div>
           </div>
-        </div>
+        </div></div>
       `;
     }).join('');
 
