@@ -436,7 +436,7 @@ const NewReservation = () => {
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
         @media print { html, body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
-      ${indices.map((_, k) => `<div class="ticket-page">${ticketsHtml.split('</div>\n        </div>\n      ')[k] ? '' : ''}</div>`).join('')}
+      ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
       </body></html>
     `);
