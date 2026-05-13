@@ -103,6 +103,7 @@ const TicketView = () => {
       const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
       const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
       return `
+        <div class="ticket-page">
         <div class="ticket">
           <div class="main">
             <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
@@ -127,17 +128,21 @@ const TicketView = () => {
             <div class="bk">${ticket.booking_id}</div>
           </div>
         </div>
+        </div>
       `;
     }).join('');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
       <style>
-        @page { size: A5 landscape; margin: 12mm; }
+        @page { size: A5 landscape; margin: 0; }
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
-          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); }
-        .ticket + .ticket { page-break-before: always; break-before: page; }
+        html, body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
+          background: #0B1F17; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .ticket-page { padding: 12mm;
+          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          page-break-after: always; break-after: page; }
+        .ticket-page:last-child { page-break-after: auto; break-after: auto; }
         .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           border: 1px solid #B59410; border-radius: 18px;
@@ -163,7 +168,7 @@ const TicketView = () => {
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
-        @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        @media print { html, body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .ticket-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
