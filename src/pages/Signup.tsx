@@ -56,6 +56,14 @@ const Signup = () => {
     setLoading(true);
 
     const hashed = await hashPassword(password);
+    // Generate verification token (raw, 32 bytes hex)
+    const tokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(tokenBytes);
+    const verificationToken = Array.from(tokenBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+
     const { error } = await supabase.from("passengers").insert({
       name: name.trim(),
       email: email.trim(),
@@ -63,11 +71,13 @@ const Signup = () => {
       password: hashed,
       trips: 0,
       total_spent: 0,
+      email_verified: false,
+      verification_token: verificationToken,
+      verification_token_expires_at: expiresAt,
     } as any);
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       const msg = error.message.includes("duplicate") || error.message.includes("unique")
         ? "An account with this email already exists"
         : error.message;
@@ -75,7 +85,31 @@ const Signup = () => {
       return;
     }
 
-    toast({ title: "Account Created!", description: `Sign in with your email.` });
+    // Send verification email
+    const verifyUrl = `${window.location.origin}/verify-email?token=${verificationToken}`;
+    try {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "signup-verification",
+          recipientEmail: email.trim(),
+          idempotencyKey: `signup-verify-${verificationToken.slice(0, 16)}`,
+          templateData: {
+            name: name.trim(),
+            verifyUrl,
+            siteName: "سِـكَّـة",
+          },
+        },
+      });
+    } catch (e) {
+      console.error("Failed to send verification email", e);
+    }
+
+    setLoading(false);
+
+    toast({
+      title: "Verify your email",
+      description: `We sent a confirmation link to ${email.trim()}. Please verify your email before signing in.`,
+    });
     navigate("/login");
   };
 

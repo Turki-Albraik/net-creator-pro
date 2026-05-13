@@ -17,3 +17,5 @@ project_id = "gtlimtdwlkfhbbdkobci"
     verify_jwt = false
   [functions.reset-password]
     verify_jwt = false
+  [functions.verify-email]
+    verify_jwt = false

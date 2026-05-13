@@ -138,32 +138,41 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          email_verified: boolean
           id: string
           name: string
           password: string | null
           phone: string | null
           total_spent: number
           trips: number
+          verification_token: string | null
+          verification_token_expires_at: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
+          email_verified?: boolean
           id?: string
           name: string
           password?: string | null
           phone?: string | null
           total_spent?: number
           trips?: number
+          verification_token?: string | null
+          verification_token_expires_at?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
+          email_verified?: boolean
           id?: string
           name?: string
           password?: string | null
           phone?: string | null
           total_spent?: number
           trips?: number
+          verification_token?: string | null
+          verification_token_expires_at?: string | null
         }
         Relationships: []
       }

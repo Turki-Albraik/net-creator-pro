@@ -82,13 +82,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // 2. Try passenger (passengers table) by email
     const { data: pData } = await supabase
       .from("passengers")
-      .select("id, name, email, password")
+      .select("id, name, email, password, email_verified")
       .eq("email", identifier)
       .maybeSingle();
 
     if (!pData) return false;
     if ((pData as any).password !== hashedInput && (pData as any).password !== password) {
       return false;
+    }
+
+    // Block sign-in until email is verified
+    if ((pData as any).email_verified === false) {
+      throw new Error("EMAIL_NOT_VERIFIED");
     }
 
     const emp: Employee = {
