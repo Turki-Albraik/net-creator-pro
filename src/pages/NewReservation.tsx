@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -108,6 +109,7 @@ const NewReservation = () => {
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [bookingId, setBookingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [printPickerOpen, setPrintPickerOpen] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const holdTimerRef = useRef<number | null>(null);
   const holdRafRef = useRef<number | null>(null);
@@ -325,23 +327,15 @@ const NewReservation = () => {
     toast({ title: "Reservation confirmed!", description: `Booking ${newBookingId} created.` });
   };
 
-  const handlePrintPDF = async () => {
+  const handlePrintPDF = async (onlyIdx: number | "all" = "all") => {
     if (!selectedRoute || !travelDate) return;
 
     const totalCoachesPdf = getCoachCount(selectedRoute.total_seats);
-    const passengersHtml = passengers.map((p, i) => {
-      const seat = selectedSeats[i];
-      if (!seat) {
-        return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name}</span></div>`;
-      }
-      const { coach } = parseSeat(seat);
-      const cls = getCoachClass(coach, totalCoachesPdf);
-      return `<div class="row"><span class="label">Passenger ${i + 1}</span><span class="value">${p.name} · ${cls} · Coach ${String(coach).padStart(2, "0")} · Seat ${seat}</span></div>`;
-    }).join("");
+    const count = Math.max(passengers.length, selectedSeats.length, 1);
+    const perPrice =
+      computeTotal(selectedSeats, selectedRoute.price_per_ticket, totalCoachesPdf, numTickets) / count;
+    const indices = onlyIdx === "all" ? Array.from({ length: count }, (_, i) => i) : [onlyIdx];
 
-    const stubSeat = selectedSeats[0] || "—";
-
-    // Barcode encodes the booking ID (scan-friendly at the gate)
     const barcodeDataUrl = generateBarcodeDataUrl(bookingId, {
       dark: "#0B1F17",
       light: "#F4E9B8",
@@ -351,6 +345,40 @@ const NewReservation = () => {
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    const ticketsHtml = indices.map((i) => {
+      const seat = selectedSeats[i] || "—";
+      const name = passengers[i]?.name || `Passenger ${i + 1}`;
+      const info = selectedSeats[i] ? parseSeat(selectedSeats[i]) : null;
+      const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
+      const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
+      return `
+        <div class="ticket">
+          <div class="main">
+            <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
+            <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
+            <div class="grid">
+              <div class="cell"><span class="label">Train</span><span class="value">${selectedRoute.train_id}</span></div>
+              <div class="cell"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
+              <div class="cell"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
+              <div class="cell"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
+            </div>
+            <div style="margin-top:14px">
+              <div class="row"><span class="label">Passenger</span><span class="value">${name}</span></div>
+              ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
+            </div>
+            <div class="seats">SEAT · ${seat}</div>
+            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
+          </div>
+          <div class="stub">
+            <div class="stub-label">Boarding Pass</div>
+            <div class="seat">${seat}</div>
+            <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
+            <div class="bk">${bookingId}</div>
+          </div>
+        </div>
+      `;
+    }).join('<div style="page-break-after:always"></div>');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${bookingId}</title>
@@ -366,7 +394,7 @@ const NewReservation = () => {
         .ticket {
           display: grid;
           grid-template-columns: 1fr 200px;
-          max-width: 760px; margin: 0 auto;
+          max-width: 760px; margin: 0 auto 24px;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
@@ -378,7 +406,6 @@ const NewReservation = () => {
         }
         .main { padding: 26px 30px; position: relative; }
         .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; }
-        .brand { display:flex; align-items:center; gap:10px; margin-bottom: 14px; }
         .brand h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin:0; color: #F4E9B8; letter-spacing: 1px; }
         .brand small { color:#D4B53A; font-size:10px; letter-spacing:3px; text-transform:uppercase; }
         .route { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 700; margin: 8px 0 18px; color:#fff; }
@@ -399,33 +426,7 @@ const NewReservation = () => {
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
         @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
-      <div class="ticket">
-        <div class="main">
-          <div class="brand">
-            <h1>سِـكَّـة</h1>
-            <small>Sikkah</small>
-          </div>
-          <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
-          <div class="grid">
-            <div class="cell"><span class="label">Train</span><span class="value">${selectedRoute.train_id}</span></div>
-            <div class="cell"><span class="label">Date</span><span class="value">${format(travelDate, "PPP")}</span></div>
-            <div class="cell"><span class="label">Departure</span><span class="value">${selectedRoute.departure_time}</span></div>
-            <div class="cell"><span class="label">Arrival</span><span class="value">${selectedRoute.arrival_time}</span></div>
-          </div>
-          <div style="margin-top:14px">${passengersHtml}</div>
-          <div class="seats">SEATS · ${selectedSeats.join("  ·  ")}</div>
-          <div class="total">
-            <span class="lbl">Total Price</span>
-            <span class="amt">SAR ${computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}</span>
-          </div>
-        </div>
-        <div class="stub">
-          <div class="stub-label">Boarding Pass</div>
-          <div class="seat">${stubSeat}</div>
-          <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
-          <div class="bk">${bookingId}</div>
-        </div>
-      </div>
+      ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
       </body></html>
     `);
@@ -997,11 +998,47 @@ const NewReservation = () => {
               <Button variant="outline" onClick={() => navigate("/reservations")}>
                 Back to Reservations
               </Button>
-              <Button onClick={handlePrintPDF}>
+              <Button onClick={() => setPrintPickerOpen(true)}>
                 <Download className="h-4 w-4 mr-2" />
-                Download / Print Ticket
+                {numTickets > 1 ? "Download / Print Tickets" : "Download / Print Ticket"}
               </Button>
             </div>
+
+            <Dialog open={printPickerOpen} onOpenChange={setPrintPickerOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-xl">Select passenger</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Choose which boarding pass to download.
+                </p>
+                <div className="grid gap-2 mt-2">
+                  {Array.from({ length: Math.max(passengers.length, selectedSeats.length, 1) }).map((_, i) => {
+                    const name = passengers[i]?.name || `Passenger ${i + 1}`;
+                    const seat = selectedSeats[i] || "—";
+                    return (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        className="justify-between h-auto py-3"
+                        onClick={() => { setPrintPickerOpen(false); handlePrintPDF(i); }}
+                      >
+                        <span className="font-semibold">Passenger {i + 1} · {name}</span>
+                        <span className="font-mono text-xs opacity-70">Seat {seat}</span>
+                      </Button>
+                    );
+                  })}
+                  {Math.max(passengers.length, selectedSeats.length, 1) > 1 && (
+                    <Button
+                      className="mt-2"
+                      onClick={() => { setPrintPickerOpen(false); handlePrintPDF("all"); }}
+                    >
+                      Download all boarding passes
+                    </Button>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </main>
