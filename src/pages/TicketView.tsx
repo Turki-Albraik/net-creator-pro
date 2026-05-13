@@ -46,6 +46,7 @@ const TicketView = () => {
   const [qr, setQr] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
