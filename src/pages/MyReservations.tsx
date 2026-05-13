@@ -251,6 +251,7 @@ const MyReservations = () => {
     });
     setPresentQr(barcode);
     setPresentRes(res);
+    setPresentPaxIdx(0);
     setPresentOpen(true);
   };
 
