@@ -22,6 +22,7 @@ import TicketView from "./pages/TicketView.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyEmail from "./pages/VerifyEmail.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
+import AuthCallback from "./pages/AuthCallback.tsx";
 
 const ProtectedRoute = ({ children, adminOnly = false, allowPassenger = false }: { children: React.ReactNode; adminOnly?: boolean; allowPassenger?: boolean }) => {
   const { isAuthenticated, employee } = useAuth();
@@ -66,6 +67,7 @@ const App = () => {
               <Route path="/signup" element={<Signup />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/ticket/:bookingId" element={<TicketView />} />
               <Route path="/" element={<ProtectedRoute allowPassenger><SmartHome /></ProtectedRoute>} />
