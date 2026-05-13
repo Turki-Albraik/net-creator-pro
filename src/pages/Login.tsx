@@ -27,12 +27,25 @@ const Login = () => {
       return;
     }
     setLoading(true);
-    const success = await login(employeeId, password);
-    setLoading(false);
-    if (success) {
-      navigate("/");
-    } else {
-      toast({ title: "Login Failed", description: "Invalid ID/email or password", variant: "destructive" });
+    try {
+      const success = await login(employeeId, password);
+      setLoading(false);
+      if (success) {
+        navigate("/");
+      } else {
+        toast({ title: "Login Failed", description: "Invalid ID/email or password", variant: "destructive" });
+      }
+    } catch (err: any) {
+      setLoading(false);
+      if (err?.message === "EMAIL_NOT_VERIFIED") {
+        toast({
+          title: "Email not verified",
+          description: "Please check your inbox and click the confirmation link before signing in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Login Failed", description: err?.message || "Something went wrong", variant: "destructive" });
+      }
     }
   };
 
