@@ -436,41 +436,76 @@ const MyReservations = () => {
                   Boarding Pass
                 </DialogTitle>
               </DialogHeader>
-              {presentRes && (
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Route</p>
-                    <p className="font-display text-2xl mt-1">{presentRes.source} → {presentRes.destination}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Train</p>
-                      <p className="font-semibold">{presentRes.train_id}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Date</p>
-                      <p className="font-semibold">{presentRes.travel_date}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Seats</p>
-                      <p className="font-mono font-semibold">{presentRes.seat_numbers?.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Passenger</p>
-                      <p className="font-semibold truncate">{presentRes.passenger_name.split(",")[0]}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
-                    {presentQr && (
-                      <img src={presentQr} alt="Barcode" className="rounded-lg max-w-[260px] w-full" style={{ background: "#F4E9B8", padding: 6 }} />
+              {presentRes && (() => {
+                const names = (presentRes.passenger_name || "").split(",").map(n => n.trim());
+                const seats = presentRes.seat_numbers || [];
+                const count = Math.max(names.length, seats.length, 1);
+                const idx = Math.min(presentPaxIdx, count - 1);
+                const name = names[idx] || `Passenger ${idx + 1}`;
+                const seat = seats[idx] || "—";
+                const totalCoaches = routeInfo ? getCoachCount(routeInfo.total_seats) : getCoachCount(seats.length * SEATS_PER_COACH);
+                const info = seats[idx] ? parseSeat(seats[idx]) : null;
+                const cls = info ? getCoachClass(info.coach, totalCoaches) : null;
+                return (
+                  <div className="mt-4 space-y-4">
+                    {count > 1 && (
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from({ length: count }).map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setPresentPaxIdx(i)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all",
+                              i === idx
+                                ? "bg-[#B59410] text-[#0B1F17] border-[#B59410]"
+                                : "border-[#F4E9B8]/30 text-[#F4E9B8]/80 hover:border-[#F4E9B8]/60"
+                            )}
+                          >
+                            Passenger {i + 1}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                    <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
-                      {presentRes.booking_id}
-                    </p>
-                    <p className="text-[10px] mt-3 tracking-widest uppercase opacity-70">Show this code at the gate</p>
+                    <div>
+                      <p className="text-[10px] tracking-[3px] uppercase" style={{ color: "#D4B53A" }}>Route</p>
+                      <p className="font-display text-2xl mt-1">{presentRes.source} → {presentRes.destination}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Train</p>
+                        <p className="font-semibold">{presentRes.train_id}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Date</p>
+                        <p className="font-semibold">{presentRes.travel_date}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Seat</p>
+                        <p className="font-mono font-semibold">{seat}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Passenger</p>
+                        <p className="font-semibold truncate">{name}</p>
+                      </div>
+                      {cls && (
+                        <div className="col-span-2">
+                          <p className="text-[10px] tracking-[2px] uppercase" style={{ color: "#D4B53A" }}>Class</p>
+                          <p className="font-semibold">{cls === "Business" && "★ "}{cls} · Coach {String(info!.coach).padStart(2, "0")}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-center pt-3 border-t border-dashed" style={{ borderColor: "rgba(245,229,184,0.4)" }}>
+                      {presentQr && (
+                        <img src={presentQr} alt="Barcode" className="rounded-lg max-w-[260px] w-full" style={{ background: "#F4E9B8", padding: 6 }} />
+                      )}
+                      <p className="font-mono text-xs mt-3 px-3 py-1 rounded" style={{ background: "#F4E9B8", color: "#0B1F17" }}>
+                        {presentRes.booking_id}
+                      </p>
+                      <p className="text-[10px] mt-3 tracking-widest uppercase opacity-70">Show this code at the gate</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </DialogContent>
         </Dialog>
