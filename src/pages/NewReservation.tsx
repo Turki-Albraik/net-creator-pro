@@ -390,13 +390,13 @@ const NewReservation = () => {
         html, body {
           font-family: 'Segoe UI', system-ui, sans-serif;
           margin: 0; padding: 0;
-          background: #0B1F17;
+          background: #143929;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
         .ticket-page {
           padding: 12mm;
-          background: linear-gradient(135deg, #1A4332 0%, #143929 35%, #0F2A1F 70%, #0B1F17 100%);
+          background: #143929;
           page-break-after: always;
           break-after: page;
         }

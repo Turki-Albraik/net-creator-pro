@@ -138,9 +138,8 @@ const TicketView = () => {
         @page { size: A5 landscape; margin: 0; }
         * { box-sizing: border-box; }
         html, body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
-          background: #0B1F17; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .ticket-page { padding: 12mm;
-          background: linear-gradient(135deg, #1A4332 0%, #143929 35%, #0F2A1F 70%, #0B1F17 100%);
+          background: #143929; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .ticket-page { padding: 12mm; background: #143929;
           page-break-after: always; break-after: page; }
         .ticket-page:last-child { page-break-after: auto; break-after: auto; }
         .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
@@ -168,7 +167,7 @@ const TicketView = () => {
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
-        @media print { html, body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .ticket-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        @media print { html, body { background: #143929 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .ticket-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
