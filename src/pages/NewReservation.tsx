@@ -379,7 +379,7 @@ const NewReservation = () => {
             <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
             <div class="bk">${bookingId}</div>
           </div>
-        </div>
+        </div></div>
       `;
     }).join('');
 
