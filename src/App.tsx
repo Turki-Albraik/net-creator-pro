@@ -19,6 +19,8 @@ import MyReservations from "./pages/MyReservations.tsx";
 import MyProfile from "./pages/MyProfile.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import TicketView from "./pages/TicketView.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 
 const ProtectedRoute = ({ children, adminOnly = false, allowPassenger = false }: { children: React.ReactNode; adminOnly?: boolean; allowPassenger?: boolean }) => {
   const { isAuthenticated, employee } = useAuth();
@@ -61,6 +63,8 @@ const App = () => {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/ticket/:bookingId" element={<TicketView />} />
               <Route path="/" element={<ProtectedRoute allowPassenger><SmartHome /></ProtectedRoute>} />
               <Route path="/schedules" element={<ProtectedRoute><Schedules /></ProtectedRoute>} />
