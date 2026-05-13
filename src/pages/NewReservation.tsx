@@ -329,21 +329,40 @@ const NewReservation = () => {
     // Send booking confirmation email to each unique passenger email
     try {
       const totalCoachesEmail = getCoachCount(selectedRoute.total_seats);
-      const uniqueEmails = Array.from(
-        new Set(passengers.map((p) => p.email.trim().toLowerCase()).filter(Boolean))
-      );
-      const seatsList = selectedSeats.length > 0 ? selectedSeats.join(", ") : "—";
       const totalAmount = computeTotal(
         selectedSeats,
         selectedRoute.price_per_ticket,
         totalCoachesEmail,
         numTickets
       );
-      const recipientName = passengers[0]?.name?.trim() || "Customer";
+
+      const barcodeDataUrl = generateBarcodeDataUrl(newBookingId, {
+        dark: "#0B1F17",
+        light: "#F4E9B8",
+        height: 80,
+        width: 2,
+      });
+
+      const allPasses = passengers.map((p, i) => {
+        const seat = selectedSeats[i] || "—";
+        const info = selectedSeats[i] ? parseSeat(selectedSeats[i]) : null;
+        const cls = info ? getCoachClass(info.coach, totalCoachesEmail) : null;
+        return {
+          email: p.email.trim().toLowerCase(),
+          name: p.name.trim() || `Passenger ${i + 1}`,
+          seat,
+          coach: info ? `Coach ${String(info.coach).padStart(2, "0")}` : "",
+          travelClass: cls || "",
+        };
+      });
+
+      const uniqueEmails = Array.from(new Set(allPasses.map((p) => p.email).filter(Boolean)));
 
       await Promise.all(
-        uniqueEmails.map((toEmail) =>
-          supabase.functions.invoke("send-transactional-email", {
+        uniqueEmails.map((toEmail) => {
+          const passesForEmail = allPasses.filter((p) => p.email === toEmail);
+          const recipientName = passesForEmail[0]?.name || "Customer";
+          return supabase.functions.invoke("send-transactional-email", {
             body: {
               templateName: "booking-confirmation",
               recipientEmail: toEmail,
@@ -357,13 +376,15 @@ const NewReservation = () => {
                 travelDate: format(travelDate, "PPP"),
                 departureTime: selectedRoute.departure_time,
                 arrivalTime: selectedRoute.arrival_time,
-                seatNumbers: seatsList,
                 totalAmount: `SAR ${totalAmount.toFixed(2)}`,
+                barcodeDataUrl,
+                passes: passesForEmail.map(({ email, ...rest }) => rest),
                 siteName: "سِـكَّـة",
+                contactEmail: "sikkahsa@gmail.com",
               },
             },
-          })
-        )
+          });
+        })
       );
     } catch (e) {
       console.error("Failed to send booking confirmation email", e);
