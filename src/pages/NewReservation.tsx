@@ -396,7 +396,7 @@ const NewReservation = () => {
         }
         .ticket-page {
           padding: 12mm;
-          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          background: linear-gradient(135deg, #1A4332 0%, #143929 35%, #0F2A1F 70%, #0B1F17 100%);
           page-break-after: always;
           break-after: page;
         }
