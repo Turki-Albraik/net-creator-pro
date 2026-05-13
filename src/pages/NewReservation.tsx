@@ -332,8 +332,11 @@ const NewReservation = () => {
 
     const totalCoachesPdf = getCoachCount(selectedRoute.total_seats);
     const count = Math.max(passengers.length, selectedSeats.length, 1);
-    const perPrice =
-      computeTotal(selectedSeats, selectedRoute.price_per_ticket, totalCoachesPdf, numTickets) / count;
+    const totalAmount = computeTotal(selectedSeats, selectedRoute.price_per_ticket, totalCoachesPdf, numTickets);
+    const priceFor = (i: number) =>
+      selectedSeats[i]
+        ? seatPrice(selectedSeats[i], selectedRoute.price_per_ticket, totalCoachesPdf)
+        : totalAmount / count;
     const indices = onlyIdx === "all" ? Array.from({ length: count }, (_, i) => i) : [onlyIdx];
 
     const barcodeDataUrl = generateBarcodeDataUrl(bookingId, {
