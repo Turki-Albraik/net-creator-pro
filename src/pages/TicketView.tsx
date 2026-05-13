@@ -128,16 +128,17 @@ const TicketView = () => {
           </div>
         </div>
       `;
-    }).join('<div style="page-break-after:always"></div>');
+    }).join('');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
       <style>
         @page { size: A5 landscape; margin: 12mm; }
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 28px;
-          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); min-height: 100vh; }
-        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto 24px;
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
+          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); }
+        .ticket + .ticket { page-break-before: always; break-before: page; }
+        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           border: 1px solid #B59410; border-radius: 18px;
           box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5); overflow: hidden; color: #FDFCF5; }
