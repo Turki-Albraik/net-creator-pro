@@ -139,8 +139,7 @@ const TicketView = () => {
         * { box-sizing: border-box; }
         html, body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
           background: #0B1F17; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .ticket-page { padding: 12mm;
-          background: linear-gradient(135deg, #1A4332 0%, #143929 35%, #0F2A1F 70%, #0B1F17 100%);
+        .ticket-page { padding: 12mm; background: #143929;
           page-break-after: always; break-after: page; }
         .ticket-page:last-child { page-break-after: auto; break-after: auto; }
         .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
