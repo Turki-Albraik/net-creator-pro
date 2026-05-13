@@ -103,6 +103,7 @@ const TicketView = () => {
       const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
       const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
       return `
+        <div class="ticket-page">
         <div class="ticket">
           <div class="main">
             <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
@@ -126,6 +127,7 @@ const TicketView = () => {
             <div class="qr"><img src="${qr}" alt="Barcode" /></div>
             <div class="bk">${ticket.booking_id}</div>
           </div>
+        </div>
         </div>
       `;
     }).join('');
