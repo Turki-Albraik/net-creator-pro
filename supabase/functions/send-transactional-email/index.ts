@@ -141,14 +141,6 @@ Deno.serve(async (req) => {
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
 
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: templateName,
-    recipient_email: effectiveRecipient,
-    status: 'pending',
-  })
-
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
     queue_name: 'transactional_emails',
     payload: {
@@ -162,7 +154,6 @@ Deno.serve(async (req) => {
       purpose: 'transactional',
       label: templateName,
       idempotency_key: idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
     },
   })
@@ -173,15 +164,6 @@ Deno.serve(async (req) => {
       templateName,
       effectiveRecipient,
     })
-
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: effectiveRecipient,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
-    })
-
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
