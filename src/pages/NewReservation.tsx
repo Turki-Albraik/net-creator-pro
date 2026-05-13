@@ -387,14 +387,14 @@ const NewReservation = () => {
         * { box-sizing: border-box; }
         body {
           font-family: 'Segoe UI', system-ui, sans-serif;
-          margin: 0; padding: 28px;
+          margin: 0; padding: 0;
           background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
-          min-height: 100vh;
         }
+        .ticket + .ticket { page-break-before: always; break-before: page; }
         .ticket {
           display: grid;
           grid-template-columns: 1fr 200px;
-          max-width: 760px; margin: 0 auto 24px;
+          max-width: 760px; margin: 0 auto;
           background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
