@@ -325,6 +325,49 @@ const NewReservation = () => {
     setBookingId(newBookingId);
     setStep("ticket");
     toast({ title: "Reservation confirmed!", description: `Booking ${newBookingId} created.` });
+
+    // Send booking confirmation email to each unique passenger email
+    try {
+      const totalCoachesEmail = getCoachCount(selectedRoute.total_seats);
+      const uniqueEmails = Array.from(
+        new Set(passengers.map((p) => p.email.trim().toLowerCase()).filter(Boolean))
+      );
+      const seatsList = selectedSeats.length > 0 ? selectedSeats.join(", ") : "—";
+      const totalAmount = computeTotal(
+        selectedSeats,
+        selectedRoute.price_per_ticket,
+        totalCoachesEmail,
+        numTickets
+      );
+      const recipientName = passengers[0]?.name?.trim() || "Customer";
+
+      await Promise.all(
+        uniqueEmails.map((toEmail) =>
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "booking-confirmation",
+              recipientEmail: toEmail,
+              idempotencyKey: `booking-${newBookingId}-${toEmail}`,
+              templateData: {
+                name: recipientName,
+                bookingId: newBookingId,
+                source: selectedRoute.source,
+                destination: selectedRoute.destination,
+                trainId: selectedRoute.train_id,
+                travelDate: format(travelDate, "PPP"),
+                departureTime: selectedRoute.departure_time,
+                arrivalTime: selectedRoute.arrival_time,
+                seatNumbers: seatsList,
+                totalAmount: `SAR ${totalAmount.toFixed(2)}`,
+                siteName: "سِـكَّـة",
+              },
+            },
+          })
+        )
+      );
+    } catch (e) {
+      console.error("Failed to send booking confirmation email", e);
+    }
   };
 
   const handlePrintPDF = async (onlyIdx: number | "all" = "all") => {
