@@ -378,7 +378,7 @@ const NewReservation = () => {
           </div>
         </div>
       `;
-    }).join('<div style="page-break-after:always"></div>');
+    }).join('');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${bookingId}</title>

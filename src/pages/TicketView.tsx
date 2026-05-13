@@ -128,7 +128,7 @@ const TicketView = () => {
           </div>
         </div>
       `;
-    }).join('<div style="page-break-after:always"></div>');
+    }).join('');
 
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
