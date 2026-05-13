@@ -133,17 +133,28 @@ const TicketView = () => {
     printWindow.document.write(`
       <html><head><title>Ticket ${ticket.booking_id}</title>
       <style>
-        @page { size: A5 landscape; margin: 12mm; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0;
-          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%); }
-        .ticket + .ticket { page-break-before: always; break-before: page; }
-        .ticket { display: grid; grid-template-columns: 1fr 200px; max-width: 760px; margin: 0 auto;
-          background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+        @page { size: A5 landscape; margin: 0; }
+        *, *::before, *::after {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        html, body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; background: #0B1F17; }
+        .page {
+          width: 100%; min-height: 100vh; padding: 14mm 12mm;
+          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          background-color: #0B1F17;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .page + .page { page-break-before: always; break-before: page; }
+        .ticket { display: grid; grid-template-columns: 1fr 200px; width: 100%; max-width: 760px;
+          background: #1A4332;
+          background-image: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
           border: 1px solid #B59410; border-radius: 18px;
           box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5); overflow: hidden; color: #FDFCF5; }
         .main { padding: 26px 30px; }
-        .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; }
+        .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; background: rgba(11,31,23,0.35); }
         .brand h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin:0; color: #F4E9B8; letter-spacing: 1px; }
         .brand small { color:#D4B53A; font-size:10px; letter-spacing:3px; text-transform:uppercase; }
         .route { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 700; margin: 8px 0 18px; color:#fff; }
