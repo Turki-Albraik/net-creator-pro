@@ -84,7 +84,7 @@ const TicketView = () => {
     load();
   }, [bookingId]);
 
-  const handleDownload = async () => {
+  const handleDownload = async (onlyIdx: number | "all" = "all") => {
     if (!ticket) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -94,8 +94,9 @@ const TicketView = () => {
     const seats = ticket.seat_numbers || [];
     const count = Math.max(names.length, seats.length, 1);
     const perPrice = Number(ticket.total_amount) / count;
+    const indices = onlyIdx === "all" ? Array.from({ length: count }, (_, i) => i) : [onlyIdx];
 
-    const ticketsHtml = Array.from({ length: count }).map((_, i) => {
+    const ticketsHtml = indices.map((i) => {
       const seat = seats[i] || "—";
       const name = names[i] || `Passenger ${i + 1}`;
       const info = seats[i] ? parseSeat(seats[i]) : null;
