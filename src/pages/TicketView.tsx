@@ -118,7 +118,7 @@ const TicketView = () => {
               ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
             </div>
             <div class="seats">SEAT · ${seat}</div>
-            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
+            
           </div>
           <div class="stub">
             <div class="stub-label">Boarding Pass</div>
