@@ -168,7 +168,7 @@ const TicketView = () => {
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
-        @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        @media print { html, body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .ticket-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
