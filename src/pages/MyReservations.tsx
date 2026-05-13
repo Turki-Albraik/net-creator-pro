@@ -90,6 +90,7 @@ const MyReservations = () => {
   const [presentOpen, setPresentOpen] = useState(false);
   const [presentRes, setPresentRes] = useState<Reservation | null>(null);
   const [presentQr, setPresentQr] = useState<string>("");
+  const [presentPaxIdx, setPresentPaxIdx] = useState(0);
 
   // Bug #4 — Use booked_by instead of name matching
   const fetchReservations = async () => {
