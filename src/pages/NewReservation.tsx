@@ -383,14 +383,22 @@ const NewReservation = () => {
     printWindow.document.write(`
       <html><head><title>Ticket ${bookingId}</title>
       <style>
-        @page { size: A5 landscape; margin: 12mm; }
+        @page { size: A5 landscape; margin: 0; }
         * { box-sizing: border-box; }
-        body {
+        html, body {
           font-family: 'Segoe UI', system-ui, sans-serif;
           margin: 0; padding: 0;
-          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          background: #0B1F17;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
-        .ticket + .ticket { page-break-before: always; break-before: page; }
+        .ticket-page {
+          padding: 12mm;
+          background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
+          page-break-after: always;
+          break-after: page;
+        }
+        .ticket-page:last-child { page-break-after: auto; break-after: auto; }
         .ticket {
           display: grid;
           grid-template-columns: 1fr 200px;
