@@ -332,11 +332,8 @@ const NewReservation = () => {
 
     const totalCoachesPdf = getCoachCount(selectedRoute.total_seats);
     const count = Math.max(passengers.length, selectedSeats.length, 1);
-    const totalAmount = computeTotal(selectedSeats, selectedRoute.price_per_ticket, totalCoachesPdf, numTickets);
-    const priceFor = (i: number) =>
-      selectedSeats[i]
-        ? seatPrice(selectedSeats[i], selectedRoute.price_per_ticket, totalCoachesPdf)
-        : totalAmount / count;
+    const perPrice =
+      computeTotal(selectedSeats, selectedRoute.price_per_ticket, totalCoachesPdf, numTickets) / count;
     const indices = onlyIdx === "all" ? Array.from({ length: count }, (_, i) => i) : [onlyIdx];
 
     const barcodeDataUrl = generateBarcodeDataUrl(bookingId, {
@@ -356,7 +353,7 @@ const NewReservation = () => {
       const cls = info ? getCoachClass(info.coach, totalCoachesPdf) : null;
       const coachStr = info ? `Coach ${String(info.coach).padStart(2, "0")}` : "";
       return `
-        <div class="page"><div class="ticket">
+        <div class="ticket">
           <div class="main">
             <div class="brand"><h1>سِـكَّـة</h1><small>Sikkah · Boarding Pass ${i + 1} of ${count}</small></div>
             <div class="route">${selectedRoute.source} → ${selectedRoute.destination}</div>
@@ -371,7 +368,7 @@ const NewReservation = () => {
               ${cls ? `<div class="row"><span class="label">Class</span><span class="value">${cls === "Business" ? "★ " : ""}${cls} · ${coachStr}</span></div>` : ""}
             </div>
             <div class="seats">SEAT · ${seat}</div>
-            <div class="total"><span class="lbl">${count > 1 ? "Price" : "Total Price"}</span><span class="amt">SAR ${priceFor(i).toFixed(0)}</span></div>
+            <div class="total"><span class="lbl">Price</span><span class="amt">SAR ${perPrice.toFixed(0)}</span></div>
           </div>
           <div class="stub">
             <div class="stub-label">Boarding Pass</div>
@@ -379,7 +376,7 @@ const NewReservation = () => {
             <div class="qr"><img src="${barcodeDataUrl}" alt="Barcode" /></div>
             <div class="bk">${bookingId}</div>
           </div>
-        </div></div>
+        </div>
       `;
     }).join('');
 
@@ -389,36 +386,18 @@ const NewReservation = () => {
         @page { size: A5 landscape; margin: 12mm; }
         * { box-sizing: border-box; }
         body {
-        @page { size: A5 landscape; margin: 0; }
-        *, *::before, *::after {
-          box-sizing: border-box;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          color-adjust: exact !important;
-        }
-        html, body {
-          margin: 0; padding: 0;
           font-family: 'Segoe UI', system-ui, sans-serif;
-          background: #0B1F17;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        .page {
-          width: 100%;
-          min-height: 100vh;
-          padding: 14mm 12mm;
+          margin: 0; padding: 0;
           background: radial-gradient(circle at 20% 20%, #1A4332 0%, #0B1F17 70%);
-          background-color: #0B1F17;
-          display: flex; align-items: center; justify-content: center;
         }
-        .page + .page { page-break-before: always; break-before: page; }
+        .ticket + .ticket { page-break-before: always; break-before: page; }
         .ticket {
           display: grid;
           grid-template-columns: 1fr 200px;
-          width: 100%;
-          max-width: 760px;
-          background: #1A4332;
-          background-image: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+          max-width: 760px; margin: 0 auto;
+          background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
           border: 1px solid #B59410;
           border-radius: 18px;
           box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
@@ -426,7 +405,7 @@ const NewReservation = () => {
           color: #FDFCF5;
         }
         .main { padding: 26px 30px; position: relative; }
-        .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; background: rgba(11,31,23,0.35); }
+        .stub { padding: 26px 18px; border-left: 2px dashed rgba(245,229,184,0.55); text-align: center; }
         .brand h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; margin:0; color: #F4E9B8; letter-spacing: 1px; }
         .brand small { color:#D4B53A; font-size:10px; letter-spacing:3px; text-transform:uppercase; }
         .route { font-family: 'Playfair Display', Georgia, serif; font-size: 30px; font-weight: 700; margin: 8px 0 18px; color:#fff; }
@@ -445,6 +424,7 @@ const NewReservation = () => {
         .total { margin-top:16px; padding-top:14px; border-top:1px solid rgba(245,229,184,0.3); display:flex; justify-content:space-between; align-items:baseline; }
         .total .lbl { color:#D4B53A; font-size:10px; letter-spacing:2px; text-transform:uppercase; }
         .total .amt { font-family: 'Playfair Display', Georgia, serif; font-size:28px; color:#F4E9B8; font-weight:700; }
+        @media print { body { background: #0B1F17 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style></head><body>
       ${ticketsHtml}
       <script>setTimeout(()=>window.print(), 300);</script>
