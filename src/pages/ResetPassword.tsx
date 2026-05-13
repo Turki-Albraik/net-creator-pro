@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { checkPassword, isPasswordValid } from "@/lib/validators";
+import { isPasswordValid } from "@/lib/validators";
 import PasswordChecklist from "@/components/PasswordChecklist";
 import logoImg from "@/assets/logo.png";
 
@@ -80,8 +80,6 @@ const ResetPassword = () => {
     }
   };
 
-  const checks = checkPassword(password);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface p-4 relative overflow-hidden">
       <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-forest-600/20 blur-3xl pointer-events-none" />
@@ -135,7 +133,7 @@ const ResetPassword = () => {
                     {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <PasswordChecklist checks={checks} />
+                <PasswordChecklist password={password} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm password</Label>
