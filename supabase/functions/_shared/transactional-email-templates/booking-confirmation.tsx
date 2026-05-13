@@ -66,7 +66,7 @@ const BookingConfirmationEmail = ({
 
         <Heading as="h2" style={h2}>Travel Instructions</Heading>
         <Text style={listItem}>• Please arrive at the train station at least <b>30 minutes</b> before departure time.</Text>
-        <Text style={listItem}>• Carry the same ID or passport used during booking.</Text>
+        
         <Text style={listItem}>• Present your boarding ticket at the station gate when requested.</Text>
         <Text style={listItem}>• Follow the coach and seat number indicated on your ticket.</Text>
         <Text style={listItem}>• For any changes or inquiries, kindly contact us before the departure time.</Text>
