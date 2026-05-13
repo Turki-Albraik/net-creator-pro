@@ -304,13 +304,60 @@ const TicketView = () => {
           });
         })()}
 
-        <div className="flex justify-center mt-6">
-          <Button onClick={handleDownload} disabled={isCancelled} size="lg" className="gap-2"
-            style={{ background: "#B59410", color: "#0B1F17" }}>
-            <Download className="h-5 w-5" />
-            Download as PDF
-          </Button>
-        </div>
+        {(() => {
+          const names = (ticket.passenger_name || "").split(",").map(n => n.trim());
+          const seats = ticket.seat_numbers || [];
+          const count = Math.max(names.length, seats.length, 1);
+          return (
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={() => (count > 1 ? setPickerOpen(true) : handleDownload("all"))}
+                disabled={isCancelled}
+                size="lg"
+                className="gap-2"
+                style={{ background: "#B59410", color: "#0B1F17" }}
+              >
+                <Download className="h-5 w-5" />
+                {count > 1 ? "Download / Print Tickets" : "Download as PDF"}
+              </Button>
+
+              <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="font-display text-xl">Select passenger</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground">
+                    Choose which boarding pass to download.
+                  </p>
+                  <div className="grid gap-2 mt-2">
+                    {Array.from({ length: count }).map((_, i) => {
+                      const name = names[i] || `Passenger ${i + 1}`;
+                      const seat = seats[i] || "—";
+                      return (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          className="justify-between h-auto py-3"
+                          onClick={() => { setPickerOpen(false); handleDownload(i); }}
+                        >
+                          <span className="font-semibold">Passenger {i + 1} · {name}</span>
+                          <span className="font-mono text-xs opacity-70">Seat {seat}</span>
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      className="mt-2"
+                      style={{ background: "#B59410", color: "#0B1F17" }}
+                      onClick={() => { setPickerOpen(false); handleDownload("all"); }}
+                    >
+                      Download all ({count}) boarding passes
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          );
+        })()}
 
         <p className="text-center text-xs mt-4 opacity-60" style={{ color: "#FDFCF5" }}>
           Present this ticket at the gate for boarding.
