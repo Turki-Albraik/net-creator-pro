@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: pData } = await supabase
       .from("passengers")
       .select("id, name, email, password, email_verified")
-      .eq("email", identifier)
+      .ilike("email", trimmed)
       .maybeSingle();
 
     if (!pData) return false;
