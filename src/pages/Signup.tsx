@@ -30,8 +30,9 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast({ title: "Error", description: "Name is required", variant: "destructive" });
+    const nameErr = getNameError(name);
+    if (nameErr) {
+      toast({ title: "Error", description: nameErr, variant: "destructive" });
       return;
     }
 
