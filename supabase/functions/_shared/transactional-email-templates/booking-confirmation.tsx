@@ -170,12 +170,9 @@ const BoardingPassCard = ({
           <td style={stub}>
             <Text style={stubLabel}>Boarding Pass</Text>
             <Text style={stubSeat}>{pass.seat}</Text>
-            <Img
-              src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(bookingId)}&scale=2&height=18&includetext&textxalign=center&backgroundcolor=F4E9B8`}
-              alt={`Barcode ${bookingId}`}
-              width="170"
-              style={{ display: 'block', margin: '6px auto', background: '#F4E9B8', borderRadius: '8px', padding: '4px' }}
-            />
+            {barcodeDataUrl ? (
+              <Img src={barcodeDataUrl} alt="Barcode" width="160" style={{ display: 'block', margin: '6px auto', background: '#F4E9B8', borderRadius: '8px', padding: '4px' }} />
+            ) : null}
             <Text style={stubBk}>{bookingId}</Text>
           </td>
         </tr>
