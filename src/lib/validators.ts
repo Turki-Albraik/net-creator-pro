@@ -25,6 +25,14 @@ export const getPasswordError = (pw: string): string | null => {
   return null;
 };
 
+export const getNameError = (name: string): string | null => {
+  if (!name || !name.trim()) return "Full name is required";
+  if (!/^[A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]+$/.test(name.trim())) {
+    return "Full name must contain letters only (no numbers or symbols)";
+  }
+  return null;
+};
+
 export const getEmailError = (email: string): string | null => {
   if (!email || !email.trim()) return "Email must not be empty";
   if (/\s/.test(email)) return "Invalid email format";
