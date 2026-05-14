@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import PasswordChecklist from "@/components/PasswordChecklist";
-import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid, getNameError } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
