@@ -55,13 +55,10 @@ const MyProfile = () => {
 
   const handleSave = async () => {
     if (!employee) return;
-    if (!name.trim()) {
-      toast({ title: "Error", description: "Name is required", variant: "destructive" });
+    const nameErr = getNameError(name);
+    if (nameErr) {
+      toast({ title: "Error", description: nameErr, variant: "destructive" });
       return;
-    }
-    if (email) {
-      const emailErr = getEmailError(email.trim());
-      if (emailErr) { toast({ title: "Error", description: emailErr, variant: "destructive" }); return; }
     }
     if (phone) {
       const phoneErr = getPhoneError(`${countryCode}${phone}`);
