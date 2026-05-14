@@ -185,29 +185,43 @@ export type Database = {
       password_reset_tokens: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           expires_at: string
           id: string
-          token: string
+          passenger_id: string | null
+          token: string | null
+          token_hash: string | null
           used_at: string | null
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           expires_at: string
           id?: string
-          token: string
+          passenger_id?: string | null
+          token?: string | null
+          token_hash?: string | null
           used_at?: string | null
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           expires_at?: string
           id?: string
-          token?: string
+          passenger_id?: string | null
+          token?: string | null
+          token_hash?: string | null
           used_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "password_reset_tokens_passenger_id_fkey"
+            columns: ["passenger_id"]
+            isOneToOne: false
+            referencedRelation: "passengers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reservations: {
         Row: {
