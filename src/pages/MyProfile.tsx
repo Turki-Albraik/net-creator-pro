@@ -76,7 +76,6 @@ const MyProfile = () => {
 
     const updatePayload: any = {
       name: newName,
-      email: email.trim() || null,
       phone: fullPhone,
     };
     // Only update password if user typed one
