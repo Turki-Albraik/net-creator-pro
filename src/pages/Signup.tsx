@@ -130,7 +130,7 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]/g, ""))} placeholder="Enter your full name" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
