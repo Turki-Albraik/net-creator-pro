@@ -212,6 +212,7 @@ const NewReservation = () => {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
       if (!p.name.trim()) return `Passenger ${i + 1}: Name is required`;
+      if (!/^[A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]+$/.test(p.name.trim())) return `Passenger ${i + 1}: Full name must contain letters only`;
       if (!p.email.trim()) return `Passenger ${i + 1}: Email is required`;
       if (!validateEmail(p.email)) return `Passenger ${i + 1}: Please enter a valid email address`;
     }
