@@ -145,12 +145,12 @@ const MyProfile = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Full Name *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Input value={name} onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]/g, ""))} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                {email && !validateEmail(email) && <p className="text-xs text-destructive">Please enter a valid email</p>}
+                <Input type="email" value={email} readOnly disabled className="bg-muted cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
               </div>
               <div className="space-y-2">
                 <Label>Phone (9 digits)</Label>
