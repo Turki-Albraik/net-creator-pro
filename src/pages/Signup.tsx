@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import logoImg from "@/assets/logo.png";
 import PasswordChecklist from "@/components/PasswordChecklist";
-import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid, getNameError } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
@@ -30,8 +30,9 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast({ title: "Error", description: "Name is required", variant: "destructive" });
+    const nameErr = getNameError(name);
+    if (nameErr) {
+      toast({ title: "Error", description: nameErr, variant: "destructive" });
       return;
     }
 
@@ -129,7 +130,7 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your full name" />
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]/g, ""))} placeholder="Enter your full name" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>

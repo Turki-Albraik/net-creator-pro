@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { hashPassword } from "@/contexts/AuthContext";
 import PasswordChecklist from "@/components/PasswordChecklist";
-import { getEmailError, getPhoneError, getPasswordError, isPasswordValid } from "@/lib/validators";
+import { getEmailError, getPhoneError, getPasswordError, isPasswordValid, getNameError } from "@/lib/validators";
 
 import { countryCodes } from "@/lib/countryCodes";
 
@@ -55,13 +55,10 @@ const MyProfile = () => {
 
   const handleSave = async () => {
     if (!employee) return;
-    if (!name.trim()) {
-      toast({ title: "Error", description: "Name is required", variant: "destructive" });
+    const nameErr = getNameError(name);
+    if (nameErr) {
+      toast({ title: "Error", description: nameErr, variant: "destructive" });
       return;
-    }
-    if (email) {
-      const emailErr = getEmailError(email.trim());
-      if (emailErr) { toast({ title: "Error", description: emailErr, variant: "destructive" }); return; }
     }
     if (phone) {
       const phoneErr = getPhoneError(`${countryCode}${phone}`);
@@ -79,7 +76,6 @@ const MyProfile = () => {
 
     const updatePayload: any = {
       name: newName,
-      email: email.trim() || null,
       phone: fullPhone,
     };
     // Only update password if user typed one
@@ -149,12 +145,12 @@ const MyProfile = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Full Name *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Input value={name} onChange={(e) => setName(e.target.value.replace(/[^A-Za-z\u00C0-\u024F\u0600-\u06FF\s'\-]/g, ""))} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                {email && !validateEmail(email) && <p className="text-xs text-destructive">Please enter a valid email</p>}
+                <Input type="email" value={email} readOnly disabled className="bg-muted cursor-not-allowed" />
+                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
               </div>
               <div className="space-y-2">
                 <Label>Phone (9 digits)</Label>
