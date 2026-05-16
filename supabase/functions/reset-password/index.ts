@@ -36,25 +36,25 @@ Deno.serve(async (req) => {
 
     const tokenHash = await sha256(token)
 
-    const { data: tokenRow } = await supabase
-      .from('password_reset_tokens')
-      .select('id, passenger_id, expires_at, used_at')
-      .eq('token_hash', tokenHash)
+    const { data: passenger } = await supabase
+      .from('passengers')
+      .select('id, reset_token_expires_at, reset_token_used_at')
+      .eq('reset_token_hash', tokenHash)
       .maybeSingle()
 
-    if (!tokenRow) {
+    if (!passenger) {
       return new Response(JSON.stringify({ error: 'Invalid or expired reset link' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-    if (tokenRow.used_at) {
+    if (passenger.reset_token_used_at) {
       return new Response(JSON.stringify({ error: 'This reset link has already been used' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-    if (new Date(tokenRow.expires_at).getTime() < Date.now()) {
+    if (!passenger.reset_token_expires_at || new Date(passenger.reset_token_expires_at).getTime() < Date.now()) {
       return new Response(JSON.stringify({ error: 'This reset link has expired' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -80,8 +80,12 @@ Deno.serve(async (req) => {
 
     const { error: updateError } = await supabase
       .from('passengers')
-      .update({ password: newHash })
-      .eq('id', tokenRow.passenger_id)
+      .update({
+        password: newHash,
+        reset_token_used_at: new Date().toISOString(),
+        reset_token_hash: null,
+      })
+      .eq('id', passenger.id)
 
     if (updateError) {
       console.error('Password update failed:', updateError)
@@ -90,11 +94,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    await supabase
-      .from('password_reset_tokens')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', tokenRow.id)
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

@@ -33,13 +33,11 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = email.trim().toLowerCase()
 
-    // Generic success response (avoid leaking which emails exist)
     const genericResponse = new Response(
       JSON.stringify({ success: true, message: 'If that email exists, a reset link has been sent.' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
 
-    // Find passenger by email (passengers only — admins must use offline reset)
     const { data: passenger } = await supabase
       .from('passengers')
       .select('id, name, email')
@@ -51,28 +49,22 @@ Deno.serve(async (req) => {
       return genericResponse
     }
 
-    // Invalidate prior unused tokens for this passenger
-    await supabase
-      .from('password_reset_tokens')
-      .update({ used_at: new Date().toISOString() })
-      .is('used_at', null)
-      .eq('passenger_id', passenger.id)
-
-    // Create new token
     const rawToken = generateToken()
     const tokenHash = await sha256(rawToken)
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 60 min
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 
-    const { error: insertError } = await supabase
-      .from('password_reset_tokens')
-      .insert({
-        passenger_id: passenger.id,
-        token_hash: tokenHash,
-        expires_at: expiresAt,
+    const { error: updateError } = await supabase
+      .from('passengers')
+      .update({
+        reset_token_hash: tokenHash,
+        reset_token_expires_at: expiresAt,
+        reset_token_used_at: null,
+        reset_token_passenger_id: passenger.id,
       })
+      .eq('id', passenger.id)
 
-    if (insertError) {
-      console.error('Failed to insert reset token:', insertError)
+    if (updateError) {
+      console.error('Failed to store reset token:', updateError)
       return new Response(JSON.stringify({ error: 'Failed to generate reset link' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -84,7 +76,6 @@ Deno.serve(async (req) => {
       : 'https://sikkahsa.online'
     const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`
 
-    // Trigger transactional email via send-transactional-email (uses service role)
     const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
       method: 'POST',
       headers: {
@@ -105,7 +96,6 @@ Deno.serve(async (req) => {
     if (!sendRes.ok) {
       const errText = await sendRes.text()
       console.error('Failed to send reset email:', errText)
-      // Still return generic success to caller
     }
 
     return genericResponse
