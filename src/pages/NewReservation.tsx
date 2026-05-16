@@ -930,17 +930,11 @@ const NewReservation = () => {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-              <h3 className="font-display font-semibold text-lg">Payment Method</h3>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Credit Card">Credit Card</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <PaymentCard
+              amountLabel={`SAR ${computeTotal(selectedSeats, selectedRoute.price_per_ticket, getCoachCount(selectedRoute.total_seats), numTickets).toFixed(0)}`}
+              disabled={isSubmitting || !!validateAllPassengers()}
+              onPaid={handleConfirm}
+            />
 
             <div className="rounded-xl border border-border bg-card p-6 space-y-3">
               <h3 className="font-display font-semibold text-lg">Booking Summary</h3>
