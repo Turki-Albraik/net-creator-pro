@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { generateBarcodeDataUrl } from "@/lib/barcode";
+import PaymentCard from "@/components/PaymentCard";
 import {
   ArrowLeft, CalendarIcon, Armchair, Clock, Ruler, Train,
   Printer, CheckCircle2, Download,
