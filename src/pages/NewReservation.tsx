@@ -971,44 +971,10 @@ const NewReservation = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <Button variant="outline" onClick={() => setStep("seats")}>Back</Button>
-              <button
-                disabled={isSubmitting}
-                onPointerDown={() => {
-                  if (isSubmitting) return;
-                  const start = performance.now();
-                  const tick = () => {
-                    const p = Math.min(100, ((performance.now() - start) / 1200) * 100);
-                    setHoldProgress(p);
-                    if (p < 100) holdRafRef.current = requestAnimationFrame(tick);
-                  };
-                  holdRafRef.current = requestAnimationFrame(tick);
-                  holdTimerRef.current = window.setTimeout(() => {
-                    setHoldProgress(100);
-                    handleConfirm();
-                  }, 1200);
-                }}
-                onPointerUp={() => {
-                  if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-                  if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current);
-                  if (holdProgress < 100) setHoldProgress(0);
-                }}
-                onPointerLeave={() => {
-                  if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-                  if (holdRafRef.current) cancelAnimationFrame(holdRafRef.current);
-                  if (holdProgress < 100) setHoldProgress(0);
-                }}
-                className="relative overflow-hidden h-11 px-6 rounded-md btn-brass font-semibold text-sm select-none disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              >
-                <span
-                  className="absolute inset-0 bg-white/25 origin-left transition-none pointer-events-none"
-                  style={{ transform: `scaleX(${holdProgress / 100})` }}
-                />
-                <CheckCircle2 className="h-4 w-4 relative z-10" />
-                <span className="relative z-10">
-                  {isSubmitting ? "Confirming..." : holdProgress > 0 && holdProgress < 100 ? "Keep holding…" : "Hold to Confirm"}
-                </span>
-              </button>
+              <Button variant="outline" onClick={() => setStep("seats")} disabled={isSubmitting}>Back</Button>
+              {validateAllPassengers() && (
+                <p className="text-xs text-destructive">{validateAllPassengers()}</p>
+              )}
             </div>
           </div>
         )}
