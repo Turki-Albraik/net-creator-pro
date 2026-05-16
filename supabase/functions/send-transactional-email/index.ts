@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
         label: templateName,
         idempotency_key: idempotencyKey,
         message_id: messageId,
+        unsubscribe_token: crypto.randomUUID(),
       },
       { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') },
     )
